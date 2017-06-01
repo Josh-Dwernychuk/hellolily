@@ -15,8 +15,10 @@ class TenantSerializer(WritableNestedSerializer):
         model = Tenant
         fields = (
             'id',
-            'name',
+            'billing_default',
+            'currency',
             'external_app_links',
             'integrations',
-            'currency',
+            'name',
+            'timelogging_enabled',
         )

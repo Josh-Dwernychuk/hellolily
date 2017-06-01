@@ -74,6 +74,31 @@
                     </li>
                     <li class="divider"></li>
                     <li class="drop-down-sub-menu-item">
+                        <a ui-sref="base.preferences.emailaccounts" ui-sref-opts="{reload:true}">
+                            <span class="drop-down-sub-menu-icon">
+                                <i class="lilicon hl-mail-icon"></i>
+                            </span>
+                            Email accounts
+                        </a>
+                    </li>
+                    <li class="drop-down-sub-menu-item">
+                        <a ui-sref="base.preferences.emailtemplates" ui-sref-opts="{reload:true}">
+                            <span class="drop-down-sub-menu-icon">
+                                <i class="icon-envelope-letter"></i>
+                            </span>
+                            Email templates
+                        </a>
+                    </li>
+                    <li class="drop-down-sub-menu-item">
+                        <a ui-sref="base.preferences.templatevariables" ui-sref-opts="{reload:true}">
+                            <span class="drop-down-sub-menu-icon">
+                                <i class="fa fa-code"></i>
+                            </span>
+                            Template variables
+                        </a>
+                    </li>
+                    <li class="divider"></li>
+                    <li class="drop-down-sub-menu-item">
                         <a ui-sref="base.preferences.company.users" ui-sref-opts="{reload:true}">
                             <span class="drop-down-sub-menu-icon">
                                 <i class="lilicon hl-cog-icon"></i>
@@ -107,29 +132,12 @@
                             Import
                         </a>
                     </li>
-                    <li class="divider"></li>
-                    <li class="drop-down-sub-menu-item">
-                        <a ui-sref="base.preferences.emailaccounts" ui-sref-opts="{reload:true}">
+                    <li class="drop-down-sub-menu-item" ng-if="currentUser.isAdmin">
+                        <a ui-sref="base.preferences.admin.settings" ui-sref-opts="{reload:true}">
                             <span class="drop-down-sub-menu-icon">
-                                <i class="lilicon hl-mail-icon"></i>
+                                <i class="fa fa-cog"></i>
                             </span>
-                            Email accounts
-                        </a>
-                    </li>
-                    <li class="drop-down-sub-menu-item">
-                        <a ui-sref="base.preferences.emailtemplates" ui-sref-opts="{reload:true}">
-                            <span class="drop-down-sub-menu-icon">
-                                <i class="icon-envelope-letter"></i>
-                            </span>
-                            Email templates
-                        </a>
-                    </li>
-                    <li class="drop-down-sub-menu-item">
-                        <a ui-sref="base.preferences.templatevariables" ui-sref-opts="{reload:true}">
-                            <span class="drop-down-sub-menu-icon">
-                                <i class="fa fa-code"></i>
-                            </span>
-                            Template variables
+                            Settings
                         </a>
                     </li>
                     <li class="divider"></li>

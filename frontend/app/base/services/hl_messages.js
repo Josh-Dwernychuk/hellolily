@@ -57,6 +57,11 @@ function HLMessages() {
                 case: 'Not the right day to act upon it?<br />Set to today or postpone it.',
                 datepicker: 'Or manually select a date:',
             },
+            timeLog: {
+                modalTitle: 'Time logging',
+                confirmButtonText: 'Log time',
+                invalidTime: 'Invalid value provided',
+            },
             dashboard: {
                 title: 'Widget settings',
             },

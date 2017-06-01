@@ -11,6 +11,7 @@ from rest_framework.serializers import as_serializer_error
 
 from lily.changes.models import Change
 from lily.socialmedia.models import SocialMedia
+from lily.timelogs.models import TimeLog
 from lily.utils.functions import format_phone_number
 
 
@@ -201,6 +202,30 @@ class ModelChangesMixin(object):
             })
 
         return Response({'objects': changes})
+
+
+class TimeLogMixin(object):
+    @detail_route(methods=['get'])
+    def timelogs(self, request, pk=None):
+        obj = self.get_object()
+
+        timelog_objects = TimeLog.objects.filter(gfk_object_id=obj.id, gfk_content_type=obj.content_type)
+        timelogs = []
+
+        for timelog in timelog_objects:
+            timelogs.append({
+                'id': timelog.id,
+                'date': timelog.date,
+                'hours_logged': timelog.hours_logged,
+                'billable': timelog.billable,
+                'user': {
+                    'id': timelog.user.id,
+                    'full_name': timelog.user.full_name,
+                    'profile_picture': timelog.user.profile_picture,
+                },
+            })
+
+        return Response({'objects': timelogs})
 
 
 class PhoneNumberFormatMixin(object):

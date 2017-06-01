@@ -322,12 +322,14 @@ INSTALLED_APPS = (
     'lily.stats',
     'lily.tags',
     'lily.tenant',
+    'lily.timelogs',
     'lily.users',
     'lily.utils',
 
     # 3rd party
     'bootstrap3',
     'django_extensions',
+    'django_filters',
     'channels',
     'collectfast',
     'templated_email',

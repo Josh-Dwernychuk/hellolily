@@ -2,7 +2,7 @@ angular.module('app.cases.services').factory('Case', Case);
 
 Case.$inject = ['$resource', 'CacheFactory', 'HLCache', 'HLResource', 'HLUtils'];
 function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
-    var _case = $resource(
+    const _case = $resource(
         '/api/cases/:id/',
         {},
         {
@@ -12,14 +12,14 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
                 params: {
                     type: 'cases_case',
                 },
-                transformResponse: function(data) {
+                transformResponse: data => {
                     let jsonData = angular.fromJson(data);
                     let objects = [];
                     let total = 0;
 
                     if (jsonData) {
                         if (jsonData.hits && jsonData.hits.length > 0) {
-                            jsonData.hits.forEach(function(obj) {
+                            jsonData.hits.forEach(obj => {
                                 objects.push(obj);
                             });
                         }
@@ -28,8 +28,8 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
                     }
 
                     return {
-                        objects: objects,
-                        total: total,
+                        objects,
+                        total,
                     };
                 },
             },
@@ -52,10 +52,10 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
             getStatuses: {
                 cache: CacheFactory.get('dataCache'),
                 url: '/api/cases/statuses/',
-                transformResponse: function(data) {
+                transformResponse: data => {
                     var statusData = angular.fromJson(data);
 
-                    angular.forEach(statusData.results, function(status) {
+                    angular.forEach(statusData.results, status => {
                         if (status.name === 'Closed') {
                             _case.closedStatus = status;
                         }
@@ -91,8 +91,7 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
     }
 
     function updateModel(data, field, caseObject) {
-        var patchPromise;
-        var args = HLResource.createArgs(data, field, caseObject);
+        const args = HLResource.createArgs(data, field, caseObject);
 
         if (field === 'name') {
             Settings.page.setAllTitles('detail', data);
@@ -106,7 +105,7 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
             args.expires = expireDate;
         }
 
-        patchPromise = HLResource.patch('Case', args).$promise;
+        const patchPromise = HLResource.patch('Case', args).$promise;
 
         if (caseObject) {
             patchPromise.then((response) => {
@@ -140,7 +139,7 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
             size: pageSize,
             sort: HLUtils.getSorting(orderColumn, orderedAsc),
             filterquery: filterQuery,
-        }, function(data) {
+        }, data => {
             return data;
         }).$promise;
     }
