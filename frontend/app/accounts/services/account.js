@@ -27,7 +27,7 @@ function Account($filter, $http, $q, $resource, HLResource, HLUtils, HLCache,
                 isArray: false,
             },
             search: {
-                url: '/search/search/?type=accounts_account&filterquery=:filterquery',
+                url: '/api/accounts/?search=:filterquery',
                 cache: true,
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);
@@ -149,20 +149,18 @@ function Account($filter, $http, $q, $resource, HLResource, HLUtils, HLCache,
         sort += orderColumn;
 
         return $http({
-            url: '/search/search/',
+            url: '/api/accounts',
             method: 'GET',
             params: {
-                type: 'accounts_account',
-                q: queryString,
-                page: page - 1,
+                search: queryString,
+                page: page,
                 size: pageSize,
-                sort: sort,
-                filterquery: filterQuery,
+                ordering: sort,
             },
         }).then(function(response) {
             return {
-                accounts: response.data.hits,
-                total: response.data.total,
+                accounts: response.data.results,
+                total: response.data.pagination.total,
             };
         });
     }

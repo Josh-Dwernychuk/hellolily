@@ -562,6 +562,22 @@ def es_url_to_dict(url):
     return tuple(sorted(host.items()))
 
 
+def es_url_to_connection(url):
+    parse = urlparse(url)
+    port = parse.port if parse.port else (80 if parse.scheme == 'http' else 443)
+    use_ssl = port is 443
+
+    host = {
+        'hosts': '%s:%s' % (parse.hostname, port),
+        'use_ssl': use_ssl,
+    }
+
+    if parse.username and parse.password:
+        host['http_auth'] = (parse.username, parse.password)
+
+    return host
+
+
 ES_PROVIDER_ENV = os.environ.get('ES_PROVIDER_ENV', 'ES_DEV_URL')
 ES_URLS = [es_url_to_dict(os.environ.get(ES_PROVIDER_ENV, 'http://es:9200'))]
 
@@ -574,6 +590,10 @@ ES_TIMEOUT = os.environ.get('ES_TIMEOUT', 20)  # Default is 5
 ES_MAXSIZE = os.environ.get('ES_MAXSIZE', 2)  # Default is 10
 
 ES_BLOCK = os.environ.get('ES_BLOCK', True)  # Default is False
+
+ELASTICSEARCH_DSL = {
+    'default':  es_url_to_connection(os.environ.get(ES_PROVIDER_ENV, 'http://es:9200')),
+}
 
 #######################################################################################################################
 # Gmail settings                                                                                                  #

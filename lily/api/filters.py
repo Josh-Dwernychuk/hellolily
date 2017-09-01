@@ -1,48 +1,33 @@
-from rest_framework.filters import BaseFilterBackend
-from rest_framework.settings import api_settings
-from lily.search.lily_search import LilySearch
+from elasticsearch_dsl.query import MultiMatch
+from rest_framework.filters import BaseFilterBackend, SearchFilter
+
+from lily.search.models import ElasticQuerySet
 
 
-class ElasticSearchFilter(BaseFilterBackend):
-    # The URL query parameter used for the search.
-    search_param = api_settings.SEARCH_PARAM
-
-    def get_search_terms(self, request):
-        """
-        Search terms are set by a ?search=... query parameter,
-        and may be comma and/or whitespace delimited.
-        """
-        params = request.query_params.get(self.search_param, '')
-        if params:
-            return params.split(',')
-        return None
+class ElasticSearchFilter(SearchFilter):
 
     def filter_queryset(self, request, queryset, view):
-        model_type = getattr(view, 'model_type', None)
+        if not isinstance(queryset, ElasticQuerySet):
+            AttributeError('ElasticSearchFilter can only be used with a ElasticQuerySet.')
 
-        if not model_type:
+        search_fields = getattr(view, 'search_fields', None)
+        search_term = request.query_params.get(self.search_param, '')
+
+        if not search_fields or not search_term:
             return queryset
 
-        search_terms = self.get_search_terms(request)
+        return queryset.elasticsearch_query(MultiMatch(query=search_term, fields=list(search_fields)))
 
-        if not search_terms:
-            return queryset
 
-        if 'limit' in request.query_params:
-            limit = request.query_params['limit']
+class SoftDeleteFilter(BaseFilterBackend):
 
-            search = LilySearch(
-                tenant_id=request.user.tenant_id,
-                model_type=model_type,
-                size=int(limit),
-            )
+    def filter_queryset(self, request, queryset, view):
+        if hasattr(view, 'filter_deleted_attribute'):
+            attribute = view.filter_deleted_attribute
         else:
-            search = LilySearch(
-                tenant_id=request.user.tenant_id,
-                model_type=model_type,
-            )
+            attribute = 'filter_deleted'
 
-        search.filter_query(' AND '.join(search_terms))
-        ids = [result['id'] for result in search.do_search(['id'])[0]]
-
-        return queryset.filter(id__in=ids)
+        if attribute in request.GET and request.GET.get(attribute) == 'False':
+            return queryset
+        else:
+            return queryset.filter(is_deleted=False)

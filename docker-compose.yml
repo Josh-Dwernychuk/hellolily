@@ -32,15 +32,37 @@ services:
     logging:
       driver: "none"
 
+#  es:
+#    image: elasticsearch:1.7-alpine  # Use latest version of 1.7.
+#    networks:
+#      internal:
+#    ports:
+#      - "9203:9200"
+#      - "9303:9300"
+#    logging:
+#      driver: "none"
+
   es:
-    image: elasticsearch:1.7-alpine  # Use latest version of 1.7.
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.5.2  # Use the latest, stable, official container.
     networks:
       internal:
     ports:
-      - "9200:9200"
-      - "9300:9300"
-    logging:
-      driver: "none"
+      - 9203:9200
+      - 9303:9300
+    environment:
+      - http.host=0.0.0.0  # Dev mode config.
+      - transport.host=127.0.0.1  # Dev mode config.
+      - xpack.security.enabled=false  # Image comes with paid auth addon, we don't want that.
+    ulimits:  # Memory configuration, don't try to understand this.
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    mem_limit: 1g  # Memory configuration, don't try to understand this.
+    cap_add:  # Memory configuration, don't try to understand this.
+      - IPC_LOCK
 
   app:
     image: "hellolily/hellolily-app:latest"

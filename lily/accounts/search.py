@@ -1,18 +1,22 @@
 from lily.accounts.models import Website
 from lily.contacts.models import Function
 from lily.search.base_mapping import BaseMapping
+from lily.search.fields import DateField, ObjectField, TextField, IntegerField, KeywordField, BooleanField
+from lily.search.indices import Index
+from lily.search.search import DocType
 from lily.socialmedia.models import SocialMedia
 from lily.tags.models import Tag
 from lily.utils.functions import format_phone_number
-from lily.utils.models.models import EmailAddress, PhoneNumber, Address
+from lily.utils.models.models import Address, EmailAddress, PhoneNumber
+from .models import Account as AccountModel
 
-from .models import Account
+index = Index('account')
 
 
 class AccountMapping(BaseMapping):
     @classmethod
     def get_model(cls):
-        return Account
+        return AccountModel
 
     @classmethod
     def get_mapping(cls):
@@ -235,3 +239,88 @@ class AccountMapping(BaseMapping):
         }
 
         return doc
+
+
+@index.doc_type
+class Account(DocType):
+    address_full = TextField()
+    address = ObjectField()
+    assigned_to = TextField(fields={'sortable': KeywordField()})
+    customer_id = TextField()
+    created = DateField(fields={'sortable': DateField()})
+    description = TextField()
+    email_address = TextField()
+    is_deleted = BooleanField()
+    modified = DateField(fields={'sortable': DateField()})
+    name = TextField(fields={'sortable': KeywordField()})
+    phone_number = ObjectField()
+    status = TextField(fields={'sortable': KeywordField()})
+    tags = ObjectField()
+    tenant_id = IntegerField()
+    website = ObjectField()
+    domain = TextField()
+
+    def get_queryset(self):
+        return AccountModel.objects.all()
+
+    def prepare_address_full(self, obj):
+        return [address.full() for address in obj.addresses.all()]
+
+    def prepare_address(self, obj):
+        return [{
+            'address': address.address,
+            'postal_code': address.postal_code,
+            'city': address.city,
+            'country': address.get_country_display() if address.country else None,
+        } for address in obj.addresses.all()]
+
+    def prepare_assigned_to(self, obj):
+        return obj.assigned_to.full_name if obj.assigned_to else None
+
+    def prepare_email_address(self, obj):
+        return [{
+            'id': email.id,
+            'email_address': email.email_address,
+            'status': email.status,
+        } for email in obj.email_addresses.all()]
+
+    def prepare_phone_number(self, obj):
+        return [{
+            'id': phone_number.id,
+            'number': phone_number.number,
+            # 'formatted_number': format_phone_number(phone_number.number),
+            'type': phone_number.type,
+            'status': phone_number.status,
+            'status_name': phone_number.get_status_display(),
+        } for phone_number in obj.phone_numbers.all()]
+
+    def prepare_status(self, obj):
+        return obj.status.name if obj.status else None
+
+    def prepare_social_media(self, obj):
+        return [{
+            'id': soc.id,
+            'name': soc.get_name_display(),
+            'username': soc.username,
+            'profile_url': soc.profile_url
+        } for soc in obj.social_media.all()]
+
+    def prepare_tags(self, obj):
+        return [{
+            'id': tag.id,
+            'name': tag.name,
+            'object_id': tag.object_id,
+        } for tag in obj.tags.all()]
+
+    def prepare_website(self, obj):
+        return [{
+            'id': website.id,
+            'website': website.website,
+            'is_primary': website.is_primary,
+        } for website in obj.websites.all()]
+
+    def prepare_domain(self, obj):
+        return [website.full_domain for website in obj.websites.all()]
+
+    class Meta:
+        model = AccountModel
