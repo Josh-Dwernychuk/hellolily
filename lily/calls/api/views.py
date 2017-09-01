@@ -7,8 +7,9 @@ from rest_framework.decorators import list_route
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 
+from lily.accounts.models import Account
+from lily.contacts.models import Contact
 from lily.users.models import LilyUser
-from lily.search.functions import search_number
 from lily.utils.functions import parse_phone_number
 
 from .serializers import CallSerializer, CallRecordSerializer
@@ -48,10 +49,9 @@ class CallViewSet(viewsets.ModelViewSet):
             return response
 
         caller_number = parse_phone_number(request.data['caller_number'])
-        result = search_number(called_user.tenant_id, caller_number)
-        search_data = result.get('data', {})
-        accounts = search_data['accounts']
-        contacts = search_data['contacts']
+
+        accounts = Account.objects.filter(phone_numbers__number=caller_number, is_deleted=False)
+        contacts = Contact.objects.filter(phone_numbers__number=caller_number, is_deleted=False)
 
         # If a single accounts with this number has been found, show information about and link to this account.
         if accounts and len(accounts) == 1:

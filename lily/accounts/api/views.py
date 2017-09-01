@@ -2,11 +2,12 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils.datastructures import MultiValueDictKeyError
 from django_filters import FilterSet
-from rest_framework.decorators import detail_route
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from rest_framework.response import Response
+from rest_framework.decorators import detail_route
 from rest_framework.filters import OrderingFilter
 from rest_framework.parsers import FileUploadParser
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from tablib import Dataset, UnsupportedFormat
@@ -15,10 +16,9 @@ from lily.api.filters import ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin
 from lily.calls.api.serializers import CallRecordSerializer
 from lily.calls.models import CallRecord
-from lily.utils.functions import uniquify
-
 from lily.socialmedia.models import SocialMedia
-from lily.utils.models.models import EmailAddress, PhoneNumber, Address
+from lily.utils.functions import uniquify
+from lily.utils.models.models import Address, EmailAddress, PhoneNumber
 from .serializers import AccountSerializer, AccountStatusSerializer
 from ..models import Account, AccountStatus, Website
 
@@ -65,18 +65,17 @@ class AccountViewSet(ModelChangesMixin, ModelViewSet):
     * List of accounts with related fields
     """
     # Set the queryset, without .all() this filters on the tenant and takes care of setting the `base_name`.
-    queryset = Account.objects
+    queryset = Account.elastic_objects
     # Set the serializer class for this viewset.
     serializer_class = AccountSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticSearchFilter, OrderingFilter, )
+    filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
-    # ElasticSearchFilter: set the model type.
-    model_type = 'accounts_account'
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('id', )
-    # OrderingFilter: set the default ordering fields.
-    ordering = ('id', )
+    ordering_fields = ('name', 'assigned_to', 'status', 'created', 'modified', 'assigned_to__first_name')
+    # SearchFilter: set the fields that can be searched on.
+    search_fields = ('assigned_to', 'description', 'email_addresses', 'name', 'phone_numbers', 'status', 'tags',
+                     'websites')
     # DjangoFilter: set the filter class.
     filter_class = AccountFilter
 
@@ -90,7 +89,7 @@ class AccountViewSet(ModelChangesMixin, ModelViewSet):
 
         return super(AccountViewSet, self).get_queryset().filter(is_deleted=False)
 
-    @detail_route(methods=['GET', ])
+    @detail_route(methods=['GET'])
     def calls(self, request, pk=None):
         account = self.get_object()
 
@@ -128,8 +127,7 @@ class AccountStatusViewSet(ModelViewSet):
 
 
 class AccountImport(APIView):
-
-    classes = (FileUploadParser, )
+    classes = (FileUploadParser,)
 
     def post(self, request):
         try:

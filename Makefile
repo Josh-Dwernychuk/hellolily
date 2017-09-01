@@ -30,15 +30,15 @@ makemigrations:
 	@echo ""
 
 migrate:
-	@echo "Make: docker-compose run --rm web python manage.py migrate"
+	@echo "Make: docker-compose run --rm web bash -c 'Dockers/wait-for-it.sh -b db:5432 && python manage.py migrate'"
 	@echo ""
-	@docker-compose run --rm web python manage.py migrate
+	@docker-compose run --rm web bash -c "Dockers/wait-for-it.sh -b db:5432 && python manage.py migrate"
 	@echo ""
 
 index:
-	@echo "Make: docker-compose run --rm web python manage.py index -f"
+	@echo "Make: docker-compose run --rm web python manage.py search_index --rebuild -f"
 	@echo ""
-	@docker-compose run --rm web python manage.py index -f
+	@docker-compose run --rm web python manage.py search_index --rebuild -f
 	@echo ""
 
 test:
@@ -77,7 +77,7 @@ manage:
 	@docker-compose run --rm web python manage.py ${cmd}
 	@echo ""
 
-setup: build migrate index testdata run
+setup: build migrate testdata index run
 
 help:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs

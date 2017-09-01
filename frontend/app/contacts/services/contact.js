@@ -42,7 +42,7 @@ function Contact($filter, $resource, HLResource, Settings) {
                 method: 'OPTIONS',
             },
             search: {
-                url: '/search/search/?type=contacts_contact&filterquery=:filterquery',
+                url: '/api/contacts/',
                 method: 'GET',
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);
@@ -50,15 +50,15 @@ function Contact($filter, $resource, HLResource, Settings) {
                     let total = 0;
 
                     if (jsonData) {
-                        if (jsonData.hits && jsonData.hits.length > 0) {
-                            jsonData.hits.forEach(function(obj) {
+                        if (jsonData.results && jsonData.results.length > 0) {
+                            jsonData.results.forEach(function(obj) {
                                 obj.primary_email_address = $filter('primaryEmail')(obj.email_addresses);
 
                                 objects.push(obj);
                             });
                         }
 
-                        total = jsonData.total;
+                        total = jsonData.pagination.total;
                     }
 
                     return {

@@ -3,7 +3,7 @@ angular.module('app.notes').factory('NoteDetail', NoteDetail);
 NoteDetail.$inject = ['$resource'];
 function NoteDetail($resource) {
     var _noteDetail = $resource(
-        '/search/search/?type=notes_note&filterquery=id\::id',
+        '/api/notes/:id',
         {
             size: 100,
         },
@@ -21,32 +21,20 @@ function NoteDetail($resource) {
                 },
             },
             query: {
-                url: '/search/search/?type=notes_note&size=:size&sort=-date&filterquery=:filterquery',
+                url: '/api/notes?ordering=-created',
                 isArray: true,
                 transformResponse: function(data) {
                     var jsonData = angular.fromJson(data);
                     var objects = [];
 
-                    if (jsonData && jsonData.hits && jsonData.hits.length > 0) {
-                        jsonData.hits.forEach(function(obj) {
+                    if (jsonData && jsonData.results && jsonData.results.length > 0) {
+                        jsonData.results.forEach(function(obj) {
                             var noteObject = $.extend(obj, {activityType: 'note', color: 'yellow'});
                             objects.push(noteObject);
                         });
                     }
 
                     return objects;
-                },
-            },
-            totalize: {
-                url: '/search/search/?type=notes_note&size=0&filterquery=:filterquery',
-                transformResponse: function(data) {
-                    var jsonData = angular.fromJson(data);
-
-                    if (jsonData && jsonData.total) {
-                        return {total: jsonData.total};
-                    }
-
-                    return {total: 0};
                 },
             },
         }

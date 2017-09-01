@@ -1,33 +1,14 @@
-from django_filters import FilterSet, CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import CharFilter
+from django_filters.rest_framework import BooleanFilter, DateFilter, DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
+from rest_framework_filters import FilterSet
 
 from lily.api.filters import ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin
-
 from .serializers import CaseSerializer, CaseStatusSerializer, CaseTypeSerializer
 from ..models import Case, CaseStatus, CaseType
-
-
-def queryset_filter(request, queryset):
-    """
-    General queryset filter being used by all views in this file.
-    """
-    is_assigned = request.GET.get('is_assigned', None)
-    # Ugly filter hack due to not functioning django-filters booleanfilter.
-    if is_assigned is not None:
-        is_assigned = is_assigned == 'False'
-        queryset = queryset.filter(assigned_to__isnull=is_assigned)
-
-    is_archived = request.GET.get('is_archived', None)
-    # Ugly filter hack due to not functioning django-filters booleanfilter.
-    if is_archived is not None:
-        is_archived = is_archived == 'False'
-        queryset = queryset.filter(is_archived=is_archived)
-
-    return queryset
 
 
 class CaseFilter(FilterSet):
@@ -38,10 +19,20 @@ class CaseFilter(FilterSet):
     status = CharFilter(name='status__status')
     not_type = CharFilter(name='type__type', exclude=True)
     not_status = CharFilter(name='status__status', exclude=True)
+    is_archived = BooleanFilter()
+    expires = DateFilter()
 
     class Meta:
         model = Case
-        fields = ['type', 'status', 'not_type', 'not_status', ]
+        fields = {
+            'type': ['exact'],
+            'status': ['exact'],
+            'not_type': ['exact'],
+            'not_status': ['exact'],
+            'is_archived': ['exact'],
+            'expires': ['exact', 'gte', 'lte', 'lt', 'gt'],
+            'account__id': ['exact'],
+        }
 
 
 class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
@@ -65,7 +56,7 @@ class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
 
     #Examples#
     - plain: `/api/cases/`
-    - search: `/api/cases/?search=subject:Doremi`
+    - search: `/api/cases/?search=subject__name:Doremi&subject=1`
     - filter: `/api/cases/?type=1`
     - order: `/api/cases/?ordering=subject,-id`
 
@@ -73,18 +64,17 @@ class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     * List of cases with related fields
     """
     # Set the queryset, without .all() this filters on the tenant and takes care of setting the `base_name`.
-    queryset = Case.objects
+    queryset = Case.elastic_objects
     # Set the serializer class for this viewset.
     serializer_class = CaseSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend,)
+    filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
-    # ElasticSearchFilter: set the model type.
-    model_type = 'cases_case'
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('id', 'created', 'modified', 'priority', 'subject',)
-    # OrderingFilter: set the default ordering fields.
-    ordering = ('id',)
+    ordering_fields = ('created', 'modified', 'type', 'status', 'assigned_to', 'priority', 'subject', 'expires',
+                       'created_by__first_name')
+    # SearchFilter: set the fields that can be searched on.
+    search_fields = ('account', 'contact', 'assigned_to', 'created_by', 'status', 'subject', 'tags', 'type')
     # DjangoFilter: set the filter class.
     filter_class = CaseFilter
 
@@ -92,8 +82,7 @@ class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
         """
         Set the queryset here so it filters on tenant and works with pagination.
         """
-        queryset = super(CaseViewSet, self).get_queryset().filter(is_deleted=False)
-        return queryset_filter(self.request, queryset)
+        return super(CaseViewSet, self).get_queryset().filter(is_deleted=False)
 
 
 class TeamsCaseList(APIView):
@@ -105,9 +94,7 @@ class TeamsCaseList(APIView):
     filter_class = CaseFilter
 
     def get_queryset(self):
-        queryset = self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-        queryset = queryset_filter(self.request, queryset)
-        return queryset
+        return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
 class CaseStatusViewSet(viewsets.ModelViewSet):
