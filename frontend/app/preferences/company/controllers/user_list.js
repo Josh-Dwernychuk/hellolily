@@ -120,9 +120,9 @@ function PreferencesCompanyUserList($compile, $scope, $state, $templateCache, HL
             User.search({
                 'filterquery': filterQuery,
                 'page': vm.table.page - 1,
-                'size': vm.table.pageSize,
-                'sort': ordering,
-                'q': vm.table.searchQuery,
+                'page_size': vm.table.pageSize,
+                'ordering': ordering,
+                'search': vm.table.searchQuery,
             }, response => {
                 vm.table.items = response.objects;
                 vm.table.totalItems = response.total;

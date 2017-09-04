@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from lily.api.filters import ElasticSearchFilter, ElasticQueryFilter, SoftDeleteFilter
+from lily.api.filters import ElasticSearchFilter, ElasticQueryFilter
 from lily.api.mixins import ModelChangesMixin
 
 from .serializers import (DealSerializer, DealNextStepSerializer, DealWhyCustomerSerializer, DealWhyLostSerializer,
@@ -168,7 +168,7 @@ class DealViewSet(ModelChangesMixin, ModelViewSet):
     # Set the serializer class for this viewset.
     serializer_class = DealSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (SoftDeleteFilter, ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
+    filter_backends = (ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
     ordering_fields = ('status.name', 'next_step.name', 'next_step_date', 'assigned_to.full_name', 'amount_once', 'amount_recurring', 'new_business', 'created', 'created_by.full_name')
@@ -176,3 +176,9 @@ class DealViewSet(ModelChangesMixin, ModelViewSet):
     search_fields = ('name', 'assigned_to')
     # DjangoFilter: set the filter class.
     filter_class = DealFilter
+
+    def get_queryset(self):
+        """
+        Set the queryset here so it filters on tenant and works with pagination.
+        """
+        return super(DealViewSet, self).get_queryset().filter(is_deleted=False)

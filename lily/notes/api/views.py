@@ -1,21 +1,23 @@
-from rest_framework import mixins
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.filters import DjangoFilterBackend, OrderingFilter
+from rest_framework.viewsets import ModelViewSet
 
+from lily.api.filters import ElasticQueryFilter, ElasticSearchFilter
 from lily.notes.api.serializers import NoteSerializer
 from lily.notes.models import Note
 
 
-class NoteViewSet(mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  mixins.DestroyModelMixin,
-                  GenericViewSet):
+class NoteViewSet(ModelViewSet):
     """
     This viewset contains all possible ways to manipulate a Note.
     """
     model = Note
-    queryset = Note.objects  # Without .all() this filters on the tenant
+    queryset = Note.elastic_objects  # Without .all() this filters on the tenant
     serializer_class = NoteSerializer
+
+    # Set all filter backends that this viewset uses.
+    filter_backends = (ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
+    # OrderingFilter: set all possible fields to order by.
+    ordering_fields = ('date', )
 
     def get_queryset(self, *args, **kwargs):
         return super(NoteViewSet, self).get_queryset().filter(is_deleted=False)

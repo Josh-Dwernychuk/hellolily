@@ -1,12 +1,17 @@
 from lily.search.base_mapping import BaseMapping
+from lily.search.fields import ObjectField, IntegerField, TextField, KeywordField, DateField, BooleanField
+from lily.search.indices import Index
+from lily.search.search import DocType
 
-from .models import Note
+from .models import Note as NoteModel
+
+index = Index('note')
 
 
 class NoteMapping(BaseMapping):
     @classmethod
     def get_model(cls):
-        return Note
+        return NoteModel
 
     @classmethod
     def get_mapping(cls):
@@ -93,3 +98,38 @@ class NoteMapping(BaseMapping):
             'type': obj.type,
             'type_display': obj.get_type_display(),
         }
+
+
+@index.doc_type
+class Note(DocType):
+    author = ObjectField(properties={
+        'id': IntegerField(),
+        'full_name': TextField(),
+    })
+    content = TextField()
+    content_type = KeywordField()
+    date = DateField(fields={'sortable': DateField()})
+    is_pinned = BooleanField()
+    modified = DateField(fields={'sortable': DateField()})
+    object_id = IntegerField()
+    subject = TextField()
+    type = IntegerField()
+    type_display = TextField()
+
+    def get_queryset(self):
+        return NoteModel.objects.all()
+
+    def prepare_content_type(self, obj):
+        return obj.content_type.name
+
+    def prepare_date(self, obj):
+        return obj.created
+
+    def prepare_subject(self, obj):
+        return str(obj.subject)
+
+    def prepare_type_display(self, obj):
+        return obj.get_type_display()
+
+    class Meta:
+        model = NoteModel

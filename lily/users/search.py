@@ -1,12 +1,18 @@
 from lily.search.base_mapping import BaseMapping
+from lily.search.fields import TextField, KeywordField, BooleanField, IntegerField
+from lily.search.indices import Index
+from lily.search.search import DocType
 
-from .models import LilyUser, Team
+from .models import LilyUser as LilyUserModel, Team as TeamModel
+
+user_index = Index('user')
+team_index = Index('user_team')
 
 
 class LilyUserMapping(BaseMapping):
     @classmethod
     def get_model(cls):
-        return LilyUser
+        return LilyUserModel
 
     @classmethod
     def get_mapping(cls):
@@ -74,7 +80,7 @@ class LilyUserMapping(BaseMapping):
 class TeamMapping(BaseMapping):
     @classmethod
     def get_model(cls):
-        return Team
+        return TeamModel
 
     @classmethod
     def get_mapping(cls):
@@ -98,3 +104,37 @@ class TeamMapping(BaseMapping):
         return {
             'name': obj.name,
         }
+
+
+@user_index.doc_type
+class LilyUser(DocType):
+    first_name = TextField(fields={'sortable': KeywordField()})
+    last_name = TextField(fields={'sortable': KeywordField()})
+    full_name = TextField()
+    position = TextField()
+    is_active = BooleanField(fields={'sortable': KeywordField()})
+    email = TextField(fields={'sortable': KeywordField()})
+    phone_number = TextField(fields={'sortable': KeywordField()})
+    internal_number = KeywordField()
+    teams = IntegerField()
+    tenant_id = IntegerField()
+
+    def get_queryset(self):
+        return LilyUserModel.objects.all()
+
+    def prepare_teams(self, obj):
+        return [team.id for team in obj.teams.all()]
+
+    class Meta:
+        model = LilyUserModel
+
+
+@team_index.doc_type
+class Team(DocType):
+    name = TextField()
+
+    def get_queryset(self):
+        return TeamModel.objects.all()
+
+    class Meta:
+        model = TeamModel

@@ -4,7 +4,7 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework.filters import OrderingFilter, DjangoFilterBackend
 from rest_framework.response import Response
 
-from lily.api.filters import ElasticSearchFilter, ElasticQueryFilter, SoftDeleteFilter
+from lily.api.filters import ElasticSearchFilter, ElasticQueryFilter
 from lily.api.mixins import ModelChangesMixin
 
 from lily.calls.api.serializers import CallRecordSerializer
@@ -41,7 +41,7 @@ class ContactViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     # Set the serializer class for this viewset.
     serializer_class = ContactSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (SoftDeleteFilter, ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
+    filter_backends = (ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
     ordering_fields = (
@@ -52,16 +52,15 @@ class ContactViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     # SearchFilter: set the fields that can be searched on.
     search_fields = ('full_name', )
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+    def get_queryset(self):
+        """
+        Set the queryset here so it filters on tenant and works with pagination.
+        """
+        if 'filter_deleted' in self.request.GET:
+            if self.request.GET.get('filter_deleted') == 'False':
+                return super(ContactViewSet, self).get_queryset()
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return super(ContactViewSet, self).get_queryset().filter(is_deleted=False)
 
     @list_route(methods=['patch', ])
     def toggle_activation(self, request):

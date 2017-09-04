@@ -3,6 +3,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from lily.search.models import ElasticTenantManager
 from lily.tenant.models import TenantMixin
 from lily.utils.models.mixins import DeletedMixin
 from lily.users.models import LilyUser
@@ -30,6 +31,7 @@ class Note(TenantMixin, DeletedMixin):
     object_id = models.PositiveIntegerField()
     subject = GenericForeignKey('content_type', 'object_id')
     is_pinned = models.BooleanField(default=False)
+    elastic_objects = ElasticTenantManager()
 
     def __unicode__(self):
         return self.content

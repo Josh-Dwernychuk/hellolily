@@ -19,24 +19,12 @@ class ElasticSearchFilter(SearchFilter):
         return queryset.elasticsearch_query(MultiMatch(query=search_term, fields=list(search_fields)))
 
 
-class SoftDeleteFilter(BaseFilterBackend):
-
-    def filter_queryset(self, request, queryset, view):
-        if hasattr(view, 'filter_deleted_attribute'):
-            attribute = view.filter_deleted_attribute
-        else:
-            attribute = 'filter_deleted'
-
-        if attribute in request.GET and request.GET.get(attribute) == 'False':
-            return queryset
-        else:
-            return queryset.filter(is_deleted=False)
-
-
 class ElasticQueryFilter(BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         if 'filterquery' in request.GET and request.GET.get('filterquery'):
+            if not hasattr(queryset, 'elasticsearch_query'):
+                queryset = queryset.all()
             return queryset.elasticsearch_query(QueryString(query=request.GET.get('filterquery')))
         else:
             return queryset

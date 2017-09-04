@@ -24,6 +24,7 @@ from two_factor.utils import default_device, backup_phones
 from user_sessions.models import Session
 from templated_email import send_templated_mail
 
+from lily.api.filters import ElasticQueryFilter, ElasticSearchFilter
 from lily.utils.functions import post_intercom_event
 
 from lily.utils.functions import has_required_tier
@@ -202,20 +203,22 @@ class LilyUserViewSet(viewsets.ModelViewSet):
     * List of cases with related fields
     """
     # Set the queryset, without .all() this filters on the tenant and takes care of setting the `base_name`.
-    queryset = LilyUser.objects
+    queryset = LilyUser.elastic_objects
     # Set the parsers for this viewset.
     parser_classes = (JSONParser, MultiPartParser, )
     # Set the serializer class for this viewset.
     serializer_class = LilyUserSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (OrderingFilter, DjangoFilterBackend)
+    filter_backends = (ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
     ordering_fields = (
-        'id', 'first_name', 'last_name', 'email', 'phone_number', 'is_active',
+        'first_name', 'last_name', 'email', 'phone_number', 'is_active',
     )
     # OrderingFilter: set the default ordering fields.
     ordering = ('first_name', 'last_name', )
+    # SearchFilter: set the fields that can be searched on.
+    search_fields = ('full_name', )
     # DjangoFilter: set the filter class.
     filter_class = LilyUserFilter
 

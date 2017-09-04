@@ -82,7 +82,8 @@ class ElasticQuerySet(models.QuerySet):
 
             sorted_models = []
             for idx in ids:
-                sorted_models.append(models[int(idx)])
+                if int(idx) in models:
+                    sorted_models.append(models[int(idx)])
             self._result_cache = sorted_models
 
         if self._prefetch_related_lookups and not self._prefetch_done:
