@@ -7,19 +7,16 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
         {},
         {
             search: {
-                url: '/search/search/',
+                url: '/api/cases',
                 method: 'GET',
-                params: {
-                    type: 'cases_case',
-                },
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);
                     let objects = [];
                     let total = 0;
 
                     if (jsonData) {
-                        if (jsonData.hits && jsonData.hits.length > 0) {
-                            jsonData.hits.forEach(function(obj) {
+                        if (jsonData.results && jsonData.results.length > 0) {
+                            jsonData.results.forEach(function(obj) {
                                 objects.push(obj);
                             });
                         }
@@ -136,9 +133,9 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
     function getCases(orderColumn, orderedAsc, filterQuery, searchQuery = '', page = 1, pageSize = 100) {
         return _case.search({
             q: searchQuery,
-            page: page - 1,
+            page: page,
             size: pageSize,
-            sort: HLUtils.getSorting(orderColumn, orderedAsc),
+            ordering: HLUtils.getSorting(orderColumn, orderedAsc),
             filterquery: filterQuery,
         }, function(data) {
             return data;

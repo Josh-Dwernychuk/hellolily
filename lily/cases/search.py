@@ -1,15 +1,20 @@
 from lily.accounts.models import Account
 from lily.contacts.models import Contact
 from lily.search.base_mapping import BaseMapping
+from lily.search.fields import ObjectField, BooleanField, IntegerField, TextField, DateField, KeywordField
+from lily.search.indices import Index
+from lily.search.search import DocType
 from lily.tags.models import Tag
 
-from .models import Case
+from .models import Case as CaseModel
+
+index = Index('case')
 
 
 class CaseMapping(BaseMapping):
     @classmethod
     def get_model(cls):
-        return Case
+        return CaseModel
 
     @classmethod
     def get_mapping(cls):
@@ -204,3 +209,75 @@ class CaseMapping(BaseMapping):
             'parcel_identifier': obj.parcel.identifier if obj.parcel else None,
             'parcel_link': obj.parcel.get_link() if obj.parcel else None,
         }
+
+
+@index.doc_type
+class Case(DocType):
+    account = ObjectField(properties={
+        'id': IntegerField(),
+        'name': TextField(),
+        'is_deleted': BooleanField(),
+    })
+    assigned_to = TextField()
+    assigned_to_teams = IntegerField()
+    contact = ObjectField(properties={
+        'id': IntegerField(),
+        'name': TextField(),
+        'is_deleted': BooleanField(),
+    })
+    created = DateField(fields={'sortable': DateField()})
+    created_by = ObjectField(properties={
+        'id': IntegerField(),
+        'full_name': TextField(),
+    })
+    description = TextField()
+    expires = DateField(fields={'sortable': DateField()})
+    is_archived = BooleanField()
+    is_deleted = BooleanField()
+    modified = DateField(fields={'sortable': DateField()})
+    newly_assigned = BooleanField()
+    priority = IntegerField(fields={'sortable': IntegerField()})
+    priority_display = TextField()
+    status = TextField()
+    subject = TextField(fields={'sortable': KeywordField()})
+    tags = ObjectField(properties={
+        'id': IntegerField(),
+        'name': TextField(),
+        'object_id': IntegerField(),
+    })
+    tenant_id = IntegerField()
+    type = ObjectField(properties={
+        'id': IntegerField(),
+        'name': TextField(),
+    })
+
+    def get_queryset(self):
+        return CaseModel.objects.all()
+
+    def prepare_assigned_to(self, obj):
+        return obj.assigned_to.full_name if obj.assigned_to else None
+
+    def prepare_assigned_to_teams(self, obj):
+        return [team.id for team in obj.assigned_to_teams.all()]
+
+    def prepare_contact(self, obj):
+        return {
+            'id': obj.contact.id,
+            'full_name': obj.contact.full_name,
+            'is_deleted': obj.contact.is_deleted,
+        } if obj.contact else None
+
+    def prepare_is_deleted(self, obj):
+        return bool(obj.deleted)
+
+    def prepare_priority_display(self, obj):
+        return obj.get_priority_display()
+
+    def prepare_status(self, obj):
+        return obj.status.name
+
+    def prepare_tenant_id(self, obj):
+        return obj.tenant_id
+
+    class Meta:
+        model = CaseModel

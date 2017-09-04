@@ -4,7 +4,7 @@ from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 
-from lily.api.filters import ElasticSearchFilter
+from lily.api.filters import ElasticSearchFilter, SoftDeleteFilter
 from lily.api.mixins import ModelChangesMixin
 
 from .serializers import CaseSerializer, CaseStatusSerializer, CaseTypeSerializer
@@ -73,27 +73,18 @@ class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     * List of cases with related fields
     """
     # Set the queryset, without .all() this filters on the tenant and takes care of setting the `base_name`.
-    queryset = Case.objects
+    queryset = Case.elastic_objects
     # Set the serializer class for this viewset.
     serializer_class = CaseSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend,)
+    filter_backends = (SoftDeleteFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
-    # ElasticSearchFilter: set the model type.
-    model_type = 'cases_case'
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('id', 'created', 'modified', 'priority', 'subject',)
-    # OrderingFilter: set the default ordering fields.
-    ordering = ('id',)
+    ordering_fields = ('created', 'modified', 'priority', 'subject', 'expires')
+    # SearchFilter: set the fields that can be searched on.
+    search_fields = ('name', 'assigned_to')
     # DjangoFilter: set the filter class.
     filter_class = CaseFilter
-
-    def get_queryset(self):
-        """
-        Set the queryset here so it filters on tenant and works with pagination.
-        """
-        queryset = super(CaseViewSet, self).get_queryset().filter(is_deleted=False)
-        return queryset_filter(self.request, queryset)
 
 
 class TeamsCaseList(APIView):
