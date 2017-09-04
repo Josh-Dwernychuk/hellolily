@@ -17,9 +17,6 @@ class ElasticQuerySet(models.QuerySet):
         if search is None:
             doc_types = registry.get_documents([model])
 
-            if len(doc_types) == 0:
-                raise AttributeError('Model %s does not have an Elasticsearch mapping.' % model.__class__)
-
             search = Search(
                 index=[doc_type.meta.index for doc_type in doc_types],
                 doc_type=list(doc_types)
@@ -51,12 +48,12 @@ class ElasticQuerySet(models.QuerySet):
                 stop = int(k.stop)
             else:
                 stop = start + 10000
-            qs.search = qs.search[start, stop]
+            qs.search = qs.search[start:stop]
             return qs
-
-        qs = self._clone()
-        qs.search = qs.search[k, k + 1]
-        return list(qs)[0]
+        else:
+            qs = self._clone()
+            qs.search = qs.search[k:k+1]
+            return list(qs)[0]
 
     def _sql_iterator(self):
         """
