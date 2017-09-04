@@ -36,7 +36,7 @@ class SoftDeleteFilter(BaseFilterBackend):
 class ElasticQueryFilter(BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
-        if 'filterquery' in request.GET:
+        if 'filterquery' in request.GET and request.GET.get('filterquery'):
             return queryset.elasticsearch_query(QueryString(query=request.GET.get('filterquery')))
         else:
             return queryset

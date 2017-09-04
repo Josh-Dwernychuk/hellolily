@@ -1,10 +1,10 @@
 from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import detail_route, list_route
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, DjangoFilterBackend
 from rest_framework.response import Response
 
-from lily.api.filters import ElasticSearchFilter
+from lily.api.filters import ElasticSearchFilter, ElasticQueryFilter, SoftDeleteFilter
 from lily.api.mixins import ModelChangesMixin
 
 from lily.calls.api.serializers import CallRecordSerializer
@@ -37,30 +37,31 @@ class ContactViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     * List of cases with related fields
     """
     # Set the queryset, without .all() this filters on the tenant and takes care of setting the `base_name`.
-    queryset = Contact.objects
+    queryset = Contact.elastic_objects
     # Set the serializer class for this viewset.
     serializer_class = ContactSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticSearchFilter, OrderingFilter,)
+    filter_backends = (SoftDeleteFilter, ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
-    # ElasticSearchFilter: set the model type.
-    model_type = 'contacts_contact'
     # OrderingFilter: set all possible fields to order by.
     ordering_fields = (
-        'id', 'first_name', 'last_name', 'full_name', 'gender', 'gender_display', 'salutation', 'salutation_display',
+        'first_name', 'last_name',
     )
     # OrderingFilter: set the default ordering fields.
     ordering = ('last_name', 'first_name',)
+    # SearchFilter: set the fields that can be searched on.
+    search_fields = ('full_name', )
 
-    def get_queryset(self):
-        """
-        Set the queryset here so it filters on tenant and works with pagination.
-        """
-        if 'filter_deleted' in self.request.GET:
-            if self.request.GET.get('filter_deleted') == 'False':
-                return super(ContactViewSet, self).get_queryset()
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
 
-        return super(ContactViewSet, self).get_queryset().filter(is_deleted=False)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @list_route(methods=['patch', ])
     def toggle_activation(self, request):

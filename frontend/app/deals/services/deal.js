@@ -167,7 +167,7 @@ function Deal($resource, CacheFactory, HLCache, HLForms, HLResource, HLUtils) {
         return _deal.search({
             search: searchQuery,
             page: page,
-            size: pageSize,
+            page_size: pageSize,
             ordering: sort,
             filterquery: filterQuery,
         }, function(data) {

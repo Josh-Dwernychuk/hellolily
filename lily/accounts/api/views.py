@@ -70,7 +70,7 @@ class AccountViewSet(ModelChangesMixin, ModelViewSet):
     # Set the serializer class for this viewset.
     serializer_class = AccountSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticQueryFilter, SoftDeleteFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
+    filter_backends = (SoftDeleteFilter, ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
     ordering_fields = ('name', 'assigned_to', 'status', 'created', 'modified')
