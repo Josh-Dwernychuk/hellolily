@@ -27,7 +27,7 @@ function Account($filter, $http, $q, $resource, HLResource, HLUtils, HLCache,
                 isArray: false,
             },
             search: {
-                url: '/api/accounts/?search=:filterquery',
+                url: '/api/accounts/?filterquery=:filterquery',
                 cache: true,
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);

@@ -1,4 +1,4 @@
-from elasticsearch_dsl.query import MultiMatch
+from elasticsearch_dsl.query import MultiMatch, QueryString
 from rest_framework.filters import BaseFilterBackend, SearchFilter
 
 from lily.search.models import ElasticQuerySet
@@ -31,3 +31,12 @@ class SoftDeleteFilter(BaseFilterBackend):
             return queryset
         else:
             return queryset.filter(is_deleted=False)
+
+
+class ElasticQueryFilter(BaseFilterBackend):
+
+    def filter_queryset(self, request, queryset, view):
+        if 'filterquery' in request.GET:
+            return queryset.elasticsearch_query(QueryString(query=request.GET.get('filterquery')))
+        else:
+            return queryset
