@@ -1,5 +1,5 @@
 from django_filters import FilterSet, CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, BooleanFilter
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
@@ -11,25 +11,6 @@ from .serializers import CaseSerializer, CaseStatusSerializer, CaseTypeSerialize
 from ..models import Case, CaseStatus, CaseType
 
 
-def queryset_filter(request, queryset):
-    """
-    General queryset filter being used by all views in this file.
-    """
-    is_assigned = request.GET.get('is_assigned', None)
-    # Ugly filter hack due to not functioning django-filters booleanfilter.
-    if is_assigned is not None:
-        is_assigned = is_assigned == 'False'
-        queryset = queryset.filter(assigned_to__isnull=is_assigned)
-
-    is_archived = request.GET.get('is_archived', None)
-    # Ugly filter hack due to not functioning django-filters booleanfilter.
-    if is_archived is not None:
-        is_archived = is_archived == 'False'
-        queryset = queryset.filter(is_archived=is_archived)
-
-    return queryset
-
-
 class CaseFilter(FilterSet):
     """
     Class to filter case queryset.
@@ -38,6 +19,7 @@ class CaseFilter(FilterSet):
     status = CharFilter(name='status__status')
     not_type = CharFilter(name='type__type', exclude=True)
     not_status = CharFilter(name='status__status', exclude=True)
+    is_archived = BooleanFilter()
 
     class Meta:
         model = Case
@@ -90,8 +72,7 @@ class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
         """
         Set the queryset here so it filters on tenant and works with pagination.
         """
-        queryset = super(CaseViewSet, self).get_queryset().filter(is_deleted=False)
-        return queryset_filter(self.request, queryset)
+        return super(CaseViewSet, self).get_queryset().filter(is_deleted=False)
 
 
 class TeamsCaseList(APIView):
@@ -103,9 +84,7 @@ class TeamsCaseList(APIView):
     filter_class = CaseFilter
 
     def get_queryset(self):
-        queryset = self.model.objects.filter(tenant_id=self.request.user.tenant_id)
-        queryset = queryset_filter(self.request, queryset)
-        return queryset
+        return self.model.objects.filter(tenant_id=self.request.user.tenant_id)
 
 
 class CaseStatusViewSet(viewsets.ModelViewSet):

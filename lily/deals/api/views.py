@@ -5,12 +5,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from lily.api.filters import ElasticSearchFilter, ElasticQueryFilter
+from lily.api.filters import ElasticQueryFilter, ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin
-
-from .serializers import (DealSerializer, DealNextStepSerializer, DealWhyCustomerSerializer, DealWhyLostSerializer,
-                          DealFoundThroughSerializer, DealContactedBySerializer, DealStatusSerializer)
-from ..models import Deal, DealNextStep, DealWhyCustomer, DealWhyLost, DealFoundThrough, DealContactedBy, DealStatus
+from .serializers import DealContactedBySerializer, DealFoundThroughSerializer, DealNextStepSerializer, \
+    DealSerializer, \
+    DealStatusSerializer, DealWhyCustomerSerializer, DealWhyLostSerializer
+from ..models import Deal, DealContactedBy, DealFoundThrough, DealNextStep, DealStatus, DealWhyCustomer, DealWhyLost
 
 
 class DealContactedByList(APIView):
@@ -119,6 +119,7 @@ class DealFilter(FilterSet):
             'created': ['exact', 'lt', 'lte', 'gt', 'gte', ],
             'currency': ['exact', ],
             'found_through': ['exact', ],
+            'is_archived': ['exact', ],
             'is_checked': ['exact', ],
             'modified': ['exact', 'lt', 'lte', 'gt', 'gte', ],
             'name': ['exact', ],
