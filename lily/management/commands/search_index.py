@@ -114,20 +114,12 @@ class Command(BaseCommand):
             index.delete(ignore=404)
         return True
 
-    # def _rebuild(self, models, options):
-    #     self.stdout.write("Creating new indexes for {}".format(', '.join(
-    #         [str(index) for index in registry.get_indices(models)]
-    #     )))
-    #
-    #     for index in registry.get_indices(models):
-    #         index_name = '%s_%s' % (index._name, int(time()))
-    #
-    #         index.connection.indices.create(index=index_name, body=index.to_dict())
-    #
-    #
-    #
-    #     self._create(models, options)
-    #     self._populate(models, options)
+    def _rebuild(self, models, options):
+        if not self._delete(models, options):
+            return
+
+        self._create(models, options)
+        self._populate(models, options)
 
     def handle(self, *args, **options):
         if not options['action']:

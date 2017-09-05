@@ -249,7 +249,11 @@ class Account(DocType):
     customer_id = TextField()
     created = DateField(fields={'sortable': DateField()})
     description = TextField()
-    email_address = TextField()
+    email_address = ObjectField(properties={
+        'id': IntegerField(),
+        'email_address': TextField(),
+        'status': IntegerField(),
+    })
     is_deleted = BooleanField()
     modified = DateField(fields={'sortable': DateField()})
     name = TextField(fields={'sortable': KeywordField()})

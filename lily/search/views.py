@@ -1,14 +1,7 @@
-from datetime import date, timedelta
-
-from django.db.models import Q
 from django.http.response import HttpResponse
 from django.views.generic.base import View
 
 import anyjson
-import freemail
-from lily.accounts.models import Account, Website
-from lily.cases.models import Case
-from lily.deals.models import Deal
 from lily.messaging.email.models.models import EmailAccount
 from lily.users.models import LilyUser
 from lily.utils.functions import parse_phone_number
@@ -158,134 +151,6 @@ class SearchView(LoginRequiredMixin, View):
             results['facets'] = facets
 
         return HttpResponse(anyjson.dumps(results), content_type='application/json; charset=utf-8')
-
-
-class EmailAddressSearchView(LoginRequiredMixin, View):
-
-    def get(self, request, *args, **kwargs):
-        email_address = kwargs.get('email_address', None)
-
-        results = {}
-
-        # Only search for contacts if a full email is given.
-        if email_address.split('@')[0]:
-            # Search for contact with given email address.
-            results = self._search_contact(email_address)
-
-        # Don't continue search if we're dealing with a free email address.
-        if freemail.is_free(email_address):
-            results.update({
-                'free_mail': True,
-            })
-        else:
-            # Search for account with given email address.
-            if not results:
-                results = self._search_account(email_address)
-
-        return HttpResponse(anyjson.dumps(results), content_type='application/json; charset=utf-8')
-
-    def _search_contact(self, email_address):
-        """
-        Search for contact with given email address.
-
-        Args:
-            email_address (string): string representation of an email address
-
-        Returns:
-            dict with search results or empty dict
-        """
-        search = LilySearch(
-            tenant_id=self.request.user.tenant_id,
-            model_type='contacts_contact',
-            size=1,
-        )
-        # Try to find an contact with the full email address.
-        search.filter_query('email_addresses.email_address:"%s"' % email_address)
-
-        hits, facets, total, took = search.do_search()
-        if hits:
-            return {
-                'type': 'contact',
-                'data': hits[0],
-            }
-        return {}
-
-    def _search_account(self, email_address):
-        """
-        Search for account with given email address.
-
-        Args:
-            email_address (string): string representation of an email address
-
-        Returns:
-            dict with search results or empty dict
-        """
-        search = LilySearch(
-            tenant_id=self.request.user.tenant_id,
-            model_type='accounts_account',
-            size=1,
-        )
-        # Try to find an account with the full email address.
-        search.filter_query('email_addresses.email_address:"%s"' % email_address)
-
-        hits, facets, total, took = search.do_search()
-        if hits:
-            return {
-                'type': 'account',
-                'data': hits[0],
-                'complete': True,
-            }
-        else:
-            search = LilySearch(
-                tenant_id=self.request.user.tenant_id,
-                model_type='accounts_account',
-                size=1,
-            )
-
-            # No account with the full email address exist, so use the domain for further searching.
-            domain = email_address.split('@')[1]
-            second_level_domain = Website(website=domain).second_level
-
-            # Try to find an account which contains the domain.
-            search.filter_query('email_addresses.email_address:"%s" OR second_level_domain:"%s"' %
-                                (domain, second_level_domain))
-
-            hits, facets, total, took = search.do_search()
-            if hits:
-                return {
-                    'type': 'account',
-                    'data': hits[0],
-                    'complete': False,
-                }
-
-        return {}
-
-
-class WebsiteSearchView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        website = kwargs.get('website', None)
-        results = self._search_website(website)
-
-        return HttpResponse(anyjson.dumps(results), content_type='application/json; charset=utf-8')
-
-    def _search_website(self, website):
-        search = LilySearch(
-            tenant_id=self.request.user.tenant_id,
-            model_type='accounts_account',
-            size=1,
-        )
-        # Try to find an account with the given website.
-        search.filter_query('domain:%s' % website)
-
-        hits, facets, total, took = search.do_search()
-        if hits:
-            return {
-                'type': 'website',
-                'data': hits[0],
-                'complete': True,
-            }
-
-        return {}
 
 
 class PhoneNumberSearchView(LoginRequiredMixin, View):
