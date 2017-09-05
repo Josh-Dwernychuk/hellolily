@@ -132,14 +132,17 @@ class ElasticQuerySet(models.QuerySet):
             (self.model._meta.object_name, num)
         )
 
-    def _earliest_or_latest(self, field_name=None, direction="-"):
-        raise NotImplementedError
-
     def first(self):
-        raise NotImplementedError
+        """
+        Returns the first object of a query, returns None if no match is found.
+        """
+        if not self._result_cache:
+            self._fetch_all()
+
+        return self._result_cache[0]
 
     def last(self):
-        raise NotImplementedError
+        raise NotImplementedError('Elasticsearch does not support last queries.')
 
     def _filter_or_exclude(self, negate, *args, **kwargs):
         """
