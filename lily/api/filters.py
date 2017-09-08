@@ -2,14 +2,12 @@ from elasticsearch_dsl.query import MultiMatch
 from rest_framework.filters import SearchFilter
 from rest_framework.settings import api_settings
 
-from lily.search.models import ElasticQuerySet
-
 
 class ElasticSearchFilter(SearchFilter):
     ordering_param = api_settings.ORDERING_PARAM
 
     def filter_queryset(self, request, queryset, view):
-        if not isinstance(queryset, ElasticQuerySet):
+        if not hasattr(queryset, 'elasticsearch_query'):
             raise AttributeError('ElasticSearchFilter can only be used with an ElasticQuerySet.')
 
         search_fields = getattr(view, 'search_fields', None)

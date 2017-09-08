@@ -1,6 +1,7 @@
 import json
 
 from django.db import models
+from django.db.models import Manager
 from django.db.models.query_utils import Q
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Bool, Term, Range, Terms, Prefix, Exists, Regexp
@@ -252,18 +253,7 @@ class ElasticQuerySet(models.QuerySet):
         return obj
 
 
-class ElasticManager(models.Manager):
-    def get_queryset(self):
-        """
-        Get the QuerySet
-
-        Returns:
-            ElasticQuerySet: The QuerySet for this manager.
-        """
-        return ElasticQuerySet(self.model, using=self._db, hints=self._hints)
-
-
-class ElasticTenantManager(ElasticManager):
+class ElasticTenantManager(Manager.from_queryset(ElasticQuerySet)):
     def get_queryset(self):
         """
         Manipulate the returned queryset by adding a filter for tenant using the tenant linked
