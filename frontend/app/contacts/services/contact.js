@@ -42,7 +42,7 @@ function Contact($filter, $resource, HLResource, Settings) {
                 method: 'OPTIONS',
             },
             search: {
-                url: '/api/contacts?filterquery=:filterquery',
+                url: '/api/contacts/',
                 method: 'GET',
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);

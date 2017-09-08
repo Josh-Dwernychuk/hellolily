@@ -22,7 +22,7 @@ function Deal($resource, CacheFactory, HLCache, HLForms, HLResource, HLUtils) {
                 },
             },
             search: {
-                url: '/api/deals',
+                url: '/api/deals/',
                 method: 'GET',
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);

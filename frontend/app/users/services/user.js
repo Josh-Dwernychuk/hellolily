@@ -39,7 +39,7 @@ function User($resource, CacheFactory) {
                 isArray: false,
             },
             search: {
-                url: '/api/users/?filterquery=:filterquery',
+                url: '/api/users/',
                 method: 'GET',
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);

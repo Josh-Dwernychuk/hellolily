@@ -172,7 +172,8 @@ class DealViewSet(ModelChangesMixin, ModelViewSet):
     filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('status.name', 'next_step.name', 'next_step_date', 'assigned_to.full_name', 'amount_once', 'amount_recurring', 'new_business', 'created', 'created_by.full_name')
+    ordering_fields = ('status.name', 'next_step__name', 'next_step_date', 'assigned_to__full_name', 'amount_once',
+                       'amount_recurring', 'new_business', 'created', 'created_by__full_name')
     # SearchFilter: set the fields that can be searched on.
     search_fields = ('name', 'assigned_to')
     # DjangoFilter: set the filter class.

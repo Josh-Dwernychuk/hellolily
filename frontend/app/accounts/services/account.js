@@ -27,7 +27,7 @@ function Account($filter, $http, $q, $resource, HLResource, HLUtils, HLCache,
                 isArray: false,
             },
             search: {
-                url: '/api/accounts/?filterquery=:filterquery',
+                url: '/api/accounts/',
                 cache: true,
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);
@@ -143,7 +143,7 @@ function Account($filter, $http, $q, $resource, HLResource, HLUtils, HLCache,
         sort += orderColumn;
 
         return $http({
-            url: '/api/accounts',
+            url: '/api/accounts/',
             method: 'GET',
             params: {
                 search: queryString,

@@ -592,7 +592,7 @@ ES_MAXSIZE = os.environ.get('ES_MAXSIZE', 2)  # Default is 10
 ES_BLOCK = os.environ.get('ES_BLOCK', True)  # Default is False
 
 ELASTICSEARCH_DSL = {
-    'default':  es_url_to_connection(os.environ.get(ES_PROVIDER_ENV, 'http://es:9200')),
+    'default': es_url_to_connection(os.environ.get(ES_PROVIDER_ENV, 'http://es:9200')),
 }
 
 #######################################################################################################################

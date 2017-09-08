@@ -1,7 +1,7 @@
 from lily.accounts.models import Account
 from lily.contacts.models import Contact
 from lily.search.base_mapping import BaseMapping
-from lily.search.fields import ObjectField, BooleanField, IntegerField, TextField, DateField, KeywordField
+from lily.search.fields import ObjectField, BooleanField, IntegerField, TextField, DateField
 from lily.search.indices import Index
 from lily.search.search import DocType
 from lily.tags.models import Tag

@@ -7,7 +7,7 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
         {},
         {
             search: {
-                url: '/api/cases',
+                url: '/api/cases/',
                 method: 'GET',
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);
@@ -132,9 +132,9 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
      */
     function getCases(orderColumn, orderedAsc, filterQuery, searchQuery = '', page = 1, pageSize = 100) {
         return _case.search({
-            q: searchQuery,
+            search: searchQuery,
             page: page,
-            size: pageSize,
+            page_size: pageSize,
             ordering: HLUtils.getSorting(orderColumn, orderedAsc),
             filterquery: filterQuery,
         }, function(data) {

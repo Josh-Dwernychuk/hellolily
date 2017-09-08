@@ -10,7 +10,7 @@ function UserTeams($resource) {
                 isArray: false,
             },
             search: {
-                url: '/api/users/team/?filterquery=:filterquery',
+                url: '/api/users/team/',
                 method: 'GET',
                 transformResponse: function(data) {
                     let jsonData = angular.fromJson(data);
@@ -24,7 +24,7 @@ function UserTeams($resource) {
                             });
                         }
 
-                        total = jsonData.total;
+                        total = jsonData.pagination.total;
                     }
 
                     return {
