@@ -148,7 +148,7 @@ function ActivityStreamDirective($filter, $q, $state, Account, Case, Change, Con
 
                 filterquery = '(' + filterquery + ')';
 
-                notePromise = NoteDetail.query({filterquery: filterquery, size: requestLength}).$promise;
+                notePromise = NoteDetail.query({filterquery: filterquery, page_size: requestLength}).$promise;
 
                 // Add promise to list of all promises for later handling.
                 promises.push(notePromise);
@@ -354,7 +354,7 @@ function ActivityStreamDirective($filter, $q, $state, Account, Case, Change, Con
                             caseItem.activityType = 'case';
 
                             activity.push(caseItem);
-                            NoteDetail.query({filterquery: 'content_type:case AND object_id:' + caseItem.id, size: 15})
+                            NoteDetail.query({content_type: 'case', object_id: caseItem.id, page_size: 15})
                                 .$promise.then(function(notes) {
                                     angular.forEach(notes, function(note) {
                                         // Get user for notes to show profile picture correctly.
@@ -389,8 +389,9 @@ function ActivityStreamDirective($filter, $q, $state, Account, Case, Change, Con
                             }
 
                             NoteDetail.query({
-                                filterquery: 'content_type:deal AND object_id:' + deal.id,
-                                size: 5,
+                                content_type: 'deal',
+                                object_id: deal.id,
+                                page_size: 5,
                             }).$promise.then(function(notes) {
                                 angular.forEach(notes, function(note) {
                                     // Get user for notes to show profile picture correctly.
@@ -416,8 +417,8 @@ function ActivityStreamDirective($filter, $q, $state, Account, Case, Change, Con
                     promises.push(callPromise);
 
                     callPromise.then(data => {
-                        data.results.map(call => {
-                            NoteDetail.query({filterquery: 'content_type:call AND object_id:' + call.id, size: 15})
+                        data.objects.map(call => {
+                            NoteDetail.query({content_type: 'call', object_id: call.id, page_size: 15})
                                 .$promise.then(notes => {
                                     angular.forEach(notes, note => {
                                         // Get user for notes to show profile picture correctly.

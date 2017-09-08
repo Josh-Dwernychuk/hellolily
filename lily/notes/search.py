@@ -102,34 +102,38 @@ class NoteMapping(BaseMapping):
 
 @index.doc_type
 class Note(DocType):
-    author = ObjectField(properties={
-        'id': IntegerField(),
-        'full_name': TextField(),
-    })
+    author = TextField()
     content = TextField()
-    content_type = KeywordField()
-    date = DateField(fields={'sortable': DateField()})
+    content_type = ObjectField(properties={
+        'id': IntegerField(),
+        'app_label': KeywordField(),
+        'model': KeywordField(),
+    })
+    created = DateField()
+    is_deleted = BooleanField()
     is_pinned = BooleanField()
-    modified = DateField(fields={'sortable': DateField()})
     object_id = IntegerField()
-    subject = TextField()
+    tenant_id = IntegerField()
     type = IntegerField()
-    type_display = TextField()
 
     def get_queryset(self):
         return NoteModel.objects.all()
 
-    def prepare_content_type(self, obj):
-        return obj.content_type.name
+    def prepare_author(self, obj):
+        return obj.author.full_name
 
-    def prepare_date(self, obj):
-        return obj.created
+    def prepare_content_type(self, obj):
+        return {
+            'id': obj.content_type.id,
+            'app_label': obj.content_type.app_label,
+            'model': obj.content_type.name,
+        }
+
+    def prepare_is_deleted(self, obj):
+        return bool(obj.deleted)
 
     def prepare_subject(self, obj):
         return str(obj.subject)
-
-    def prepare_type_display(self, obj):
-        return obj.get_type_display()
 
     class Meta:
         model = NoteModel

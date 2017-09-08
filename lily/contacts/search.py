@@ -296,7 +296,7 @@ class Contact(DocType):
             } for phone_number in func.account.phone_numbers.all()],
         }
 
-    def prepare_account(self, obj):
+    def prepare_accounts(self, obj):
         functions = obj.functions.filter(account__is_deleted=False)
 
         return [self._convert_function_to_account(func) for func in functions]

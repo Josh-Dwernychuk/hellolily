@@ -41,7 +41,7 @@ class ElasticQuerySet(models.QuerySet):
         if self._result_cache is not None:
             return self._result_cache[k]
 
-        if self._has_full_text_search():
+        if self._has_full_text_search:
             if isinstance(k, slice):
                 qs = self._clone()
                 if k.start is not None:
@@ -70,6 +70,7 @@ class ElasticQuerySet(models.QuerySet):
         """
         return super(ElasticQuerySet, self).iterator()
 
+    @property
     def _has_full_text_search(self):
         """
         Check whether this queryset has any full text search queries.
@@ -125,7 +126,7 @@ class ElasticQuerySet(models.QuerySet):
         """
         if self._total is not None:
             return self._total
-        elif self._has_full_text_search():
+        elif self._has_full_text_search:
             self._fetch_all()
             return self._total
         else:

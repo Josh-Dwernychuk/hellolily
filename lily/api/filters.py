@@ -10,7 +10,7 @@ class ElasticSearchFilter(SearchFilter):
 
     def filter_queryset(self, request, queryset, view):
         if not isinstance(queryset, ElasticQuerySet):
-            raise AttributeError('ElasticSearchFilter can only be used with a ElasticQuerySet.')
+            raise AttributeError('ElasticSearchFilter can only be used with an ElasticQuerySet.')
 
         search_fields = getattr(view, 'search_fields', None)
         search_term = request.query_params.get(self.search_param, '')
@@ -19,6 +19,6 @@ class ElasticSearchFilter(SearchFilter):
             return queryset
 
         if self.ordering_param in request.GET:
-            raise AttributeError('ElasticSearchFilter orders on relevant and cannot be used with custom ordering.')
+            raise AttributeError('ElasticSearchFilter orders on relevancy and cannot be used with custom ordering.')
 
         return queryset.elasticsearch_query(MultiMatch(query=search_term, fields=list(search_fields)))

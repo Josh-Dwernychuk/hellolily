@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import View
 
-from lily.search.lily_search import LilySearch
+from lily.contacts.models import Contact
 from lily.utils.views.mixins import LoginRequiredMixin, ExportListViewMixin
 
 
@@ -47,7 +47,7 @@ class ExportContactView(LoginRequiredMixin, ExportListViewMixin, View):
         },
         'tags': {
             'headers': [_('Tags')],
-            'columns_for_item': ['tag']
+            'columns_for_item': ['tags']
         },
     }
 
@@ -55,24 +55,20 @@ class ExportContactView(LoginRequiredMixin, ExportListViewMixin, View):
     def value_for_column(self, contact, column):
         try:
             if column == 'url':
-                return '/#/contacts/%s' % contact['id']
+                return '/#/contacts/%s' % contact.id
             elif column == 'accounts':
                 # 'accounts' is a dict, so we need to process it differently.
-                value = []
-                for account in contact.get('accounts', []):
-                    value.append(account['name'])
+                value = [account.name for account in contact.accounts.all()]
             elif column == 'email_addresses':
                 # 'email_addresses' is a dict, so we need to process it differently.
-                value = []
-                for email in contact.get('email_addresses', []):
-                    value.append(email['email_address'])
+                value = [email.email_address for email in contact.email_addresses.all()]
             elif column == 'phone_numbers':
                 # 'phone_numbers' is a dict, so we need to process it differently.
-                value = []
-                for phone_number in contact.get('phone_numbers', []):
-                    value.append(phone_number['number'])
+                value = [phone_number.number for phone_number in contact.phone_numbers.all()]
+            elif column == 'tags':
+                value = [tag.name for tag in contact.tags.all()]
             else:
-                value = contact[column]
+                value = getattr(contact, column)
 
             if isinstance(value, list):
                 value = ', '.join(value)
@@ -80,15 +76,5 @@ class ExportContactView(LoginRequiredMixin, ExportListViewMixin, View):
             value = ''
         return value
 
-    # ExportListViewMixin
-    def get_items(self):
-        search = LilySearch(
-            tenant_id=self.request.user.tenant_id,
-            model_type='contacts_contact',
-            page=0,
-            size=1000000000,
-        )
-
-        if self.request.GET.get('export_filter'):
-            search.query_common_fields(self.request.GET.get('export_filter'))
-        return search.do_search()[0]
+    def get_queryset(self):
+        return Contact.objects.all()

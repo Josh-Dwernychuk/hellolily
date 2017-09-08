@@ -21,7 +21,7 @@ function NoteDetail($resource) {
                 },
             },
             query: {
-                url: '/api/notes?page_size=:size&ordering=-date&filterquery=:filterquery',
+                url: '/api/notes?ordering=-created',
                 isArray: true,
                 transformResponse: function(data) {
                     var jsonData = angular.fromJson(data);
@@ -35,18 +35,6 @@ function NoteDetail($resource) {
                     }
 
                     return objects;
-                },
-            },
-            totalize: {
-                url: '/api/notes?page_size=0&filterquery=:filterquery',
-                transformResponse: function(data) {
-                    var jsonData = angular.fromJson(data);
-
-                    if (jsonData && jsonData.total) {
-                        return {total: jsonData.total};
-                    }
-
-                    return {total: 0};
                 },
             },
         }
