@@ -58,7 +58,7 @@ function Contact($filter, $resource, HLResource, Settings) {
                             });
                         }
 
-                        total = jsonData.total;
+                        total = jsonData.pagination.total;
                     }
 
                     return {

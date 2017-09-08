@@ -108,13 +108,13 @@ class TeamMapping(BaseMapping):
 
 @user_index.doc_type
 class LilyUser(DocType):
-    first_name = TextField(fields={'sortable': KeywordField()})
-    last_name = TextField(fields={'sortable': KeywordField()})
+    first_name = KeywordField()
+    last_name = KeywordField()
     full_name = TextField()
     position = TextField()
-    is_active = BooleanField(fields={'sortable': KeywordField()})
-    email = TextField(fields={'sortable': KeywordField()})
-    phone_number = TextField(fields={'sortable': KeywordField()})
+    is_active = BooleanField()
+    email = TextField()
+    phone_number = TextField()
     internal_number = KeywordField()
     teams = IntegerField()
     tenant_id = IntegerField()

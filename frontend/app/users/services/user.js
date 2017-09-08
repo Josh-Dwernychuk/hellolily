@@ -53,7 +53,7 @@ function User($resource, CacheFactory) {
                             });
                         }
 
-                        total = jsonData.total;
+                        total = jsonData.pagination.total;
                     }
 
                     return {

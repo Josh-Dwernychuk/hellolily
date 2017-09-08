@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from lily.api.filters import ElasticQueryFilter, ElasticSearchFilter
+from lily.api.filters import ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin
 from .serializers import DealContactedBySerializer, DealFoundThroughSerializer, DealNextStepSerializer, \
     DealSerializer, \
@@ -169,7 +169,7 @@ class DealViewSet(ModelChangesMixin, ModelViewSet):
     # Set the serializer class for this viewset.
     serializer_class = DealSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
+    filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
     ordering_fields = ('status.name', 'next_step.name', 'next_step_date', 'assigned_to.full_name', 'amount_once', 'amount_recurring', 'new_business', 'created', 'created_by.full_name')

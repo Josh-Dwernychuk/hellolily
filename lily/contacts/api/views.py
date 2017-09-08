@@ -4,7 +4,7 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework.filters import OrderingFilter, DjangoFilterBackend
 from rest_framework.response import Response
 
-from lily.api.filters import ElasticSearchFilter, ElasticQueryFilter
+from lily.api.filters import ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin
 
 from lily.calls.api.serializers import CallRecordSerializer
@@ -41,12 +41,10 @@ class ContactViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     # Set the serializer class for this viewset.
     serializer_class = ContactSerializer
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
+    filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = (
-        'first_name', 'last_name',
-    )
+    ordering_fields = ('first_name', 'last_name')
     # OrderingFilter: set the default ordering fields.
     ordering = ('last_name', 'first_name',)
     # SearchFilter: set the fields that can be searched on.

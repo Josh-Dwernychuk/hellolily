@@ -1,7 +1,7 @@
 from rest_framework.filters import DjangoFilterBackend, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
 
-from lily.api.filters import ElasticQueryFilter, ElasticSearchFilter
+from lily.api.filters import ElasticSearchFilter
 from lily.notes.api.serializers import NoteSerializer
 from lily.notes.models import Note
 
@@ -15,7 +15,7 @@ class NoteViewSet(ModelViewSet):
     serializer_class = NoteSerializer
 
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticQueryFilter, ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
+    filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
     # OrderingFilter: set all possible fields to order by.
     ordering_fields = ('date', )
 

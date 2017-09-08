@@ -225,21 +225,21 @@ class Case(DocType):
         'name': TextField(),
         'is_deleted': BooleanField(),
     })
-    created = DateField(fields={'sortable': DateField()})
+    created = DateField()
     created_by = ObjectField(properties={
         'id': IntegerField(),
         'full_name': TextField(),
     })
     description = TextField()
-    expires = DateField(fields={'sortable': DateField()})
+    expires = DateField()
     is_archived = BooleanField()
     is_deleted = BooleanField()
-    modified = DateField(fields={'sortable': DateField()})
+    modified = DateField()
     newly_assigned = BooleanField()
-    priority = IntegerField(fields={'sortable': IntegerField()})
+    priority = IntegerField()
     priority_display = TextField()
     status = TextField()
-    subject = TextField(fields={'sortable': KeywordField()})
+    subject = TextField()
     tags = ObjectField(properties={
         'id': IntegerField(),
         'name': TextField(),

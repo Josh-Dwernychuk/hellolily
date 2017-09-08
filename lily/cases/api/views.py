@@ -1,12 +1,11 @@
-from django_filters import FilterSet, CharFilter
-from django_filters.rest_framework import DjangoFilterBackend, BooleanFilter
+from django_filters import CharFilter, FilterSet
+from django_filters.rest_framework import BooleanFilter, DateFilter, DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
 
 from lily.api.filters import ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin
-
 from .serializers import CaseSerializer, CaseStatusSerializer, CaseTypeSerializer
 from ..models import Case, CaseStatus, CaseType
 
@@ -20,10 +19,18 @@ class CaseFilter(FilterSet):
     not_type = CharFilter(name='type__type', exclude=True)
     not_status = CharFilter(name='status__status', exclude=True)
     is_archived = BooleanFilter()
+    expires = DateFilter()
 
     class Meta:
         model = Case
-        fields = ['type', 'status', 'not_type', 'not_status', ]
+        fields = {
+            'type': ['exact'],
+            'status': ['exact'],
+            'not_type': ['exact'],
+            'not_status': ['exact'],
+            'is_archived': ['exact'],
+            'expires': ['exact', 'gte', 'lte', 'lt', 'gt'],
+        }
 
 
 class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):

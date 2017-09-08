@@ -59,7 +59,6 @@ class Contact(Common, TaggedObjectMixin):
         through_fields=('contact', 'account'),
         related_name='contacts',
     )
-
     elastic_objects = ElasticTenantManager()
 
     @property

@@ -21,7 +21,7 @@ function Case($resource, CacheFactory, HLCache, HLResource, HLUtils) {
                             });
                         }
 
-                        total = jsonData.total;
+                        total = jsonData.pagination.total;
                     }
 
                     return {

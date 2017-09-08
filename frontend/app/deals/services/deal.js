@@ -43,7 +43,7 @@ function Deal($resource, CacheFactory, HLCache, HLForms, HLResource, HLUtils) {
                             });
                         }
 
-                        total = jsonData.total;
+                        total = jsonData.pagination.total;
                     }
 
                     return {

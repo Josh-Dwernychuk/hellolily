@@ -148,7 +148,7 @@ function Account($filter, $http, $q, $resource, HLResource, HLUtils, HLCache,
             params: {
                 search: queryString,
                 page: page,
-                size: pageSize,
+                page_size: pageSize,
                 ordering: sort,
             },
         }).then(function(response) {

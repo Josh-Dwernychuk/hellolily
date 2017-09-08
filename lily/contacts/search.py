@@ -263,10 +263,10 @@ class Contact(DocType):
         'email_address': TextField(),
         'status': IntegerField(),
     })
-    first_name = TextField(fields={'sortable': KeywordField()})
+    first_name = KeywordField()
     full_name = TextField()
     is_deleted = BooleanField()
-    last_name = TextField(fields={'sortable': KeywordField()})
+    last_name = KeywordField()
     modified = DateField()
     phone_numbers = ObjectField(properties={
         'id': IntegerField(),

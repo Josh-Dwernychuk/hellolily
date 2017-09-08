@@ -124,8 +124,8 @@ function PreferencesCompanyUserList($compile, $scope, $state, $templateCache, HL
                 'ordering': ordering,
                 'search': vm.table.searchQuery,
             }, response => {
-                vm.table.items = response.objects;
-                vm.table.totalItems = response.total;
+                vm.table.items = response.results;
+                vm.table.totalItems = response.pagination.total;
 
                 if (filterQuery === '') {
                     // 'All' filter selected, so count invites as well.

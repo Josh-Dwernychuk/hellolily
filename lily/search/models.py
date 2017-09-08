@@ -1,3 +1,5 @@
+import json
+
 from django.db import models
 from django.db.models.query_utils import Q
 from elasticsearch_dsl import Search
@@ -39,22 +41,25 @@ class ElasticQuerySet(models.QuerySet):
         if self._result_cache is not None:
             return self._result_cache[k]
 
-        if isinstance(k, slice):
-            qs = self._clone()
-            if k.start is not None:
-                start = int(k.start)
+        if self._has_full_text_search():
+            if isinstance(k, slice):
+                qs = self._clone()
+                if k.start is not None:
+                    start = int(k.start)
+                else:
+                    start = 0
+                if k.stop is not None:
+                    stop = int(k.stop)
+                else:
+                    stop = start + 10000
+                qs.search = qs.search[start:stop]
+                return qs
             else:
-                start = 0
-            if k.stop is not None:
-                stop = int(k.stop)
-            else:
-                stop = start + 10000
-            qs.search = qs.search[start:stop]
-            return qs
+                qs = self._clone()
+                qs.search = qs.search[k:k+1]
+                return list(qs)[0]
         else:
-            qs = self._clone()
-            qs.search = qs.search[k:k+1]
-            return list(qs)[0]
+            return super(ElasticQuerySet, self).__getitem__(k)
 
     def _sql_iterator(self):
         """
@@ -65,6 +70,20 @@ class ElasticQuerySet(models.QuerySet):
         """
         return super(ElasticQuerySet, self).iterator()
 
+    def _has_full_text_search(self):
+        """
+        Check whether this queryset has any full text search queries.
+
+        Elasticsearch DSL wraps every search in a bool query. These queries
+        typically have two components: a `filter` component and a `must`
+        component for full text search. To figure out if such a component,
+        check the search dict for search['query']['bool']['must'].
+
+        Returns:
+            bool: True if any full text queries are present, False otherwise.
+        """
+        return 'must' in self.search.to_dict().get('query', {}).get('bool', {})
+
     def _fetch_all(self):
         """
         Fetch all models from the database based on the Elasticsearch results.
@@ -73,25 +92,26 @@ class ElasticQuerySet(models.QuerySet):
         Elasticsearch results.
         """
         if self._result_cache is None:
-            response = self.search.execute(ignore_cache=True)
-            self._total = response.hits.total
-            ids = [hit.meta.id for hit in response.hits]
+            if self._has_full_text_search:
+                response = self.search.execute(ignore_cache=True)
+                self._total = response.hits.total
+                ids = [hit.meta.id for hit in response.hits]
 
-            obj = self._clone()
-            obj.query.add_q(Q(pk__in=ids))
-            models = {obj._get_pk_val(): obj for obj in obj._sql_iterator()}
+                obj = self._clone()
+                obj.query.add_q(Q(pk__in=ids))
+                models = {obj._get_pk_val(): obj for obj in obj._sql_iterator()}
 
-            sorted_models = []
-            for idx in ids:
-                if int(idx) in models:
-                    sorted_models.append(models[int(idx)])
-            self._result_cache = sorted_models
+                sorted_models = []
+                for idx in ids:
+                    if int(idx) in models:
+                        sorted_models.append(models[int(idx)])
+                self._result_cache = sorted_models
+            else:
+                self._result_cache = list(self._sql_iterator())
+                self._total = super(ElasticQuerySet, self).count()
 
         if self._prefetch_related_lookups and not self._prefetch_done:
             self._prefetch_related_objects()
-
-    def aggregate(self, *args, **kwargs):
-        raise NotImplementedError()
 
     def count(self):
         """
@@ -103,10 +123,13 @@ class ElasticQuerySet(models.QuerySet):
         Returns:
             int: The number of objects.
         """
-        if self._total is None:
+        if self._total is not None:
+            return self._total
+        elif self._has_full_text_search():
             self._fetch_all()
-
-        return self._total
+            return self._total
+        else:
+            return super(ElasticQuerySet, self).count()
 
     def get(self, *args, **kwargs):
         """
@@ -160,9 +183,14 @@ class ElasticQuerySet(models.QuerySet):
         queries = []
 
         for key, value in kwargs.iteritems():
-            method = key.split('__')[-1]
+            # Make sure we can serialize the search parameter.
+            try:
+                json.dumps(value)
+            except TypeError:
+                value = str(value)
 
             # Detect whether we're dealing with a "special" filter here.
+            method = key.split('__')[-1]
             if method in (
                     'gte', 'gt', 'lt', 'lte', 'exact', 'iexact', 'contains', 'icontains', 'in', 'startswith',
                     'istartswith', 'endswith', 'iendswith', 'range', 'year', 'month', 'day', 'hour', 'minute',
@@ -171,7 +199,7 @@ class ElasticQuerySet(models.QuerySet):
                 field = str(key.replace('__' + method, ''))
 
                 if method in ('gte', 'gt', 'lt', 'lte'):
-                    query = Range(**{method: {field: value}})
+                    query = Range(**{field: {method: value}})
                 elif method == 'exact':
                     query = Term(**{field: value})
                 elif method == 'in':
@@ -202,37 +230,6 @@ class ElasticQuerySet(models.QuerySet):
         clone.search = clone.search.query(Bool(filter=queries))
 
         return clone
-
-    def order_by(self, *field_names):
-        """
-        Order the models by the given field names with Elasticsearch.
-
-        Args:
-            *field_names: The names of fields to order by.
-
-        Returns:
-            ElasticQuerySet: A clone of itself with the ordering.
-        """
-        assert self.query.can_filter(), \
-            "Cannot reorder a query once a slice has been taken."
-        obj = self._clone()
-        obj.search = obj.search.sort()
-
-        fields = list(field_names)
-        if 'id' in fields:
-            fields.remove('id')
-
-        if len(fields) > 0:
-            obj.search = obj.search.sort(*fields)
-
-        return obj
-
-    def extra(self, select=None, where=None, params=None, tables=None,
-              order_by=None, select_params=None):
-        """
-        Elasticsearch does not support tacking on custom SQL queries.
-        """
-        raise NotImplementedError('Elasticsearch does not support custom SQL.')
 
     def _clone(self, klass=None, setup=False, **kwargs):
         """

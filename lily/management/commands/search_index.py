@@ -2,8 +2,6 @@ from __future__ import unicode_literals, absolute_import
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.six.moves import input
 
-from time import time
-
 from lily.search.registries import registry
 
 from elasticsearch_dsl.connections import connections
