@@ -30,6 +30,7 @@ class CaseFilter(FilterSet):
             'not_status': ['exact'],
             'is_archived': ['exact'],
             'expires': ['exact', 'gte', 'lte', 'lt', 'gt'],
+            'account__id': ['exact'],
         }
 
 
@@ -69,9 +70,12 @@ class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('created', 'modified', 'priority', 'subject', 'expires')
+    ordering_fields = ('created', 'modified', 'type', 'status_id', 'assigned_to', 'priority', 'subject', 'expires',
+                       'created_by__first_name')
     # SearchFilter: set the fields that can be searched on.
-    search_fields = ('name', 'assigned_to')
+    search_fields = ('account.name', 'contact.full_name', 'assigned_to', 'created_by.full_name', 'status.name',
+                     'subject',
+                     'tags.name', 'type.name',)
     # DjangoFilter: set the filter class.
     filter_class = CaseFilter
 

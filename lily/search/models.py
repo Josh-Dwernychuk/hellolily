@@ -161,10 +161,13 @@ class ElasticQuerySet(models.QuerySet):
         """
         Returns the first object of a query, returns None if no match is found.
         """
-        if not self._result_cache:
-            self._fetch_all()
+        if self._has_full_text_search:
+            if not self._result_cache:
+                self._fetch_all()
 
-        return self._result_cache[0]
+            return self._result_cache[0]
+        else:
+            return super(ElasticQuerySet, self).first()
 
     def last(self):
         raise NotImplementedError('Elasticsearch does not support last queries.')

@@ -2,7 +2,6 @@ from django_filters import CharFilter
 from rest_framework.filters import DjangoFilterBackend, FilterSet, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
 
-from lily.api.filters import ElasticSearchFilter
 from lily.notes.api.serializers import NoteSerializer
 from lily.notes.models import Note
 
@@ -24,13 +23,11 @@ class NoteViewSet(ModelViewSet):
     serializer_class = NoteSerializer
 
     # Set all filter backends that this viewset uses.
-    filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
+    filter_backends = (OrderingFilter, DjangoFilterBackend)
     # OrderingFilter: set all possible fields to order by.
     ordering_fields = ('created',)
     # DjangoFilterBackend: set the possible fields to filter on.
     filter_class = NoteFilter
-    # SearchFilter: the fields to search.
-    search_fields = ('author', 'content')
 
     def get_queryset(self, *args, **kwargs):
         return super(NoteViewSet, self).get_queryset().filter(is_deleted=False)

@@ -73,9 +73,10 @@ class AccountViewSet(ModelChangesMixin, ModelViewSet):
     filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('name', 'assigned_to', 'status', 'created', 'modified')
+    ordering_fields = ('name', 'assigned_to', 'status_id', 'created', 'modified')
     # SearchFilter: set the fields that can be searched on.
-    search_fields = ('name', 'assigned_to')
+    search_fields = ('tags__name', 'email_addresses__email_address', 'assigned_to__full_name', 'customer_id', 'name',
+                     'status', 'type', 'phone_numbers__number', 'domains')
     # DjangoFilter: set the filter class.
     filter_class = AccountFilter
 

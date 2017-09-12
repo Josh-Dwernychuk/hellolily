@@ -450,7 +450,7 @@ function ActivityStreamDirective($filter, $q, $state, Account, Case, Change, Con
                         var emailMessageList = results[1];
 
                         emailMessageList.forEach(function(email) {
-                            User.search({filterquery: 'email:' + email.sender_email, is_active: 'All'}).$promise.then(function(userResults) {
+                            User.search({email: email.sender_email, is_active: 'All'}).$promise.then(function(userResults) {
                                 if (userResults.objects[0]) {
                                     email.profile_picture = userResults.objects[0].profile_picture;
                                 } else {

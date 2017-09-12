@@ -44,11 +44,13 @@ class ContactViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('first_name', 'last_name')
+    ordering_fields = ('first_name', 'last_name', 'created', 'modified', 'accounts__name', 'status__id')
     # OrderingFilter: set the default ordering fields.
     ordering = ('last_name', 'first_name',)
     # SearchFilter: set the fields that can be searched on.
-    search_fields = ('full_name', )
+    search_fields = ('accounts__name', 'accounts__phone_numbers', 'description', 'email_addresses__email_address',
+                     'full_name', 'phone_numbers__number', 'tags__name')
+    filter_fields = ('accounts__id', )
 
     def get_queryset(self):
         """

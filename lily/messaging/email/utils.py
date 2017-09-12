@@ -20,8 +20,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from lily.accounts.models import Account
 from lily.contacts.models import Contact
-from lily.search.scan_search import ModelMappings
-from lily.search.indexing import update_in_index
 
 from .decorators import get_safe_template
 from .models.models import EmailAttachment, EmailMessage, EmailAccount

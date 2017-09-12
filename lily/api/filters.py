@@ -16,8 +16,12 @@ class ElasticSearchFilter(SearchFilter):
         if not search_fields or not search_term:
             return queryset
 
-        if request.GET.get(self.ordering_param, None):
-            raise AttributeError('ElasticSearchFilter orders on relevancy and cannot be used with custom ordering.')
-
         fields = [field.replace('__', '.') for field in search_fields]
-        return queryset.elasticsearch_query(MultiMatch(query=search_term, fields=fields))
+
+        return queryset.elasticsearch_query(MultiMatch(
+            query=search_term,
+            fields=fields,
+            type='most_fields',
+            operator='and',
+            fuzziness='AUTO'
+        ))

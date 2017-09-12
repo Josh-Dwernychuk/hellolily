@@ -7,8 +7,9 @@ from rest_framework.decorators import list_route
 from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 
+from lily.accounts.models import Account
+from lily.contacts.models import Contact
 from lily.users.models import LilyUser
-from lily.search.functions import search_number
 from lily.utils.functions import parse_phone_number
 
 from .serializers import CallSerializer, CallRecordSerializer
@@ -34,6 +35,36 @@ class CallViewSet(viewsets.ModelViewSet):
         """
         return super(CallViewSet, self).get_queryset().filter()
 
+    def _search_number(self, tenant_id, number, return_related=True):
+        """
+        If the phone number belongs to an account, this returns the first account and all its contacts
+        Else if the number belongs to a contact, this returns the first contact and all its accounts
+        """
+        phone_number = parse_phone_number(number)
+        accounts = Account.objects.filter(phone_numbers__number=phone_number, is_deleted=False)
+        contacts = Contact.objects.filter(phone_numbers__number=phone_number, is_deleted=False)
+
+        accounts_result = []
+        contacts_result = []
+
+        if accounts:
+            accounts_result = [accounts[0]]
+
+            if return_related:
+                contacts_result = accounts[0].contacts.filter(is_deleted=False)
+        elif contacts:
+            contacts_result = [contacts[0]]
+
+            if return_related:
+                accounts_result = contacts[0].accounts.filter(is_deleted=False)
+
+        return {
+            'data': {
+                'accounts': accounts_result,
+                'contacts': contacts_result,
+            },
+        }
+
     def create(self, request, *args, **kwargs):
         """
         Sends a websocket message to the user with the corresponding internal number
@@ -48,7 +79,9 @@ class CallViewSet(viewsets.ModelViewSet):
             return response
 
         caller_number = parse_phone_number(request.data['caller_number'])
-        result = search_number(called_user.tenant_id, caller_number)
+
+        # TODO: search_number is horribly inefficient when used in the create function.
+        result = self._search_number(called_user.tenant_id, caller_number)
         search_data = result.get('data', {})
         accounts = search_data['accounts']
         contacts = search_data['contacts']

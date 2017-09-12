@@ -117,13 +117,20 @@ function PreferencesCompanyUserList($compile, $scope, $state, $templateCache, HL
             const ordering = vm.table.order.descending ? '-' + vm.table.order.column : vm.table.order.column;
             const filterQuery = vm.table.statusFilter !== undefined ? `is_active:${vm.table.statusFilter}` : '';
 
-            User.search({
-                'filterquery': filterQuery,
-                'page': vm.table.page - 1,
-                'page_size': vm.table.pageSize,
-                'ordering': ordering,
-                'search': vm.table.searchQuery,
-            }, response => {
+            const queryData = {
+                page: vm.table.page,
+                page_size: vm.table.pageSize,
+                ordering: ordering,
+                search: vm.table.searchQuery,
+            };
+
+        if (vm.table.statusFilter !== undefined) { // undefined here means "ALL"
+            queryData.is_active = vm.table.statusFilter;
+        } else {
+            queryData.is_active = 'All';
+        }
+
+            User.search(queryData, response => {
                 vm.table.items = response.results;
                 vm.table.totalItems = response.pagination.total;
 
