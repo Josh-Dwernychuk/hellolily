@@ -9,7 +9,6 @@ import chargebee
 import dj_database_url
 import raven
 from django.conf import global_settings
-from django.core.urlresolvers import reverse_lazy
 
 
 #######################################################################################################################
@@ -65,6 +64,7 @@ DATABASES = {
 }
 
 SITE_ID = os.environ.get('SITE_ID', 1)
+
 
 #######################################################################################################################
 # REDIS CONFIG                                                                                                        #
@@ -208,7 +208,6 @@ AWS_HEADERS = {
 #######################################################################################################################
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = 'base_view'
-LOGOUT_URL = reverse_lazy('logout')
 # Also used as timeout for activation link.
 PASSWORD_RESET_TIMEOUT_DAYS = os.environ.get('PASSWORD_RESET_TIMEOUT_DAYS', 7)
 USER_INVITATION_TIMEOUT_DAYS = int(os.environ.get('USER_INVITATION_TIMEOUT_DAYS', 7))
@@ -250,7 +249,6 @@ MIDDLEWARE_CLASSES = (
     'lily.middleware.SetRemoteAddrFromForwardedFor',
     # 'django.contrib.sessions.middleware.SessionMiddleware',  # Replaced by user_sessions.
     'user_sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -423,7 +421,7 @@ LOGGING = {
             'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
         },
         'null': {
-            'class': 'django.utils.log.NullHandler',
+            'class': 'logging.NullHandler',
         },
     },
 }
@@ -663,8 +661,10 @@ chargebee.configure(CHARGEBEE_API_KEY, CHARGEBEE_SITE)
 #######################################################################################################################
 # TESTING                                                                                                             #
 #######################################################################################################################
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+TEST_RUNNER = 'lily.tests.utils.LilyNoseTestSuiteRunner'
 NOSE_ARGS = ['--nocapture', '--nologcapture']
+TESTING = False  # Is set to True in the testrunner.
+TEST_SUPPRESS_LOG = False
 
 #######################################################################################################################
 # MISCELLANEOUS SETTINGS                                                                                              #

@@ -466,7 +466,7 @@ class MessageBuilder(object):
             # Save headers.
             if len(self.headers):
                 self.message.headers.all().delete()
-                self.message.headers.add(*self.headers)
+                self.message.headers.add(bulk=False, *self.headers)
 
             # Save attachments.
             if len(self.attachments):

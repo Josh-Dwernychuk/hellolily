@@ -60,6 +60,7 @@ def get_safe_template(tags=None, filters=None, extra=None):
 
                 # Install whitelist library and extras as builtins
                 template.base.builtins.append(whitelist)
+                # TODO this might cause issues in django 1.9
                 [template.add_to_builtins(e) for e in extra]
 
                 return func(*args, **kwargs)

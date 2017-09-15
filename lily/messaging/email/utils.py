@@ -12,7 +12,7 @@ from urllib import unquote
 from django.apps import apps
 from django.conf import settings
 from django.core.files.storage import default_storage
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.template import engines, Context, TemplateSyntaxError
 from django.template.base import VARIABLE_TAG_START, VARIABLE_TAG_END
 from django.template.loader_tags import BlockNode, ExtendsNode

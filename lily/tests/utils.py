@@ -1,12 +1,15 @@
+import logging
 from urllib import urlencode
 
 from datetime import datetime, timedelta, date
 import json
 
+from django_nose import NoseTestSuiteRunner
 from oauth2client import GOOGLE_TOKEN_URI
 from oauth2client.client import OAuth2Credentials
 
 from decimal import Decimal
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser, Group
 from django.db.models import Manager, Model
 from rest_framework import status
@@ -17,6 +20,28 @@ from rest_framework.utils import model_meta
 from lily.tenant.factories import TenantFactory
 from lily.tenant.middleware import set_current_user
 from lily.users.models import LilyUser
+
+
+class LilyNoseTestSuiteRunner(NoseTestSuiteRunner):
+    """
+    Bootstrap into the testsuite running process.
+
+    Customize settings to run the test suite without problems.
+    Settings it changes:
+        * TESTING=True, useful to check if we are running tests.
+    """
+    def __init__(self, *args, **kwargs):
+        super(LilyNoseTestSuiteRunner, self).__init__(*args, **kwargs)
+
+        if settings.TEST_SUPPRESS_LOG:
+            # Suppress logging during a testrun.
+            logging.disable(logging.CRITICAL)
+
+        settings.TESTING = True
+
+        # manage.py test already does this, but not when providing a path, like
+        # manage.py test lily/contacts/tests.
+        settings.DEBUG = False
 
 
 class UserBasedTest(object):

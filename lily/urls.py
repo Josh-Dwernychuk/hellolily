@@ -40,7 +40,7 @@ urlpatterns = [
     url(r'^500.html$', TemplateView.as_view(template_name='500.html')),
 ]
 
-if settings.DEBUG:
+if any([settings.DEBUG, settings.TESTING]):
     # Works only in debug mode
     urlpatterns += [
         url(r'^media/(.*)$', serve, {'document_root': settings.MEDIA_ROOT}),

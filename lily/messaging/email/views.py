@@ -14,8 +14,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.files.storage import default_storage
-from django.core.servers.basehttp import FileWrapper
-from django.core.urlresolvers import reverse
+from wsgiref.util import FileWrapper
+from django.urls import reverse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest, Http404, HttpResponse
 from django.template import Context, Template
 from django.utils.safestring import mark_safe
