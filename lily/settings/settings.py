@@ -333,7 +333,6 @@ INSTALLED_APPS = (
     'templated_email',
     'storages',
     'taskmonitor',
-    'elasticutils',
     'timezone_field',
     'django_nose',
     'django_password_strength',

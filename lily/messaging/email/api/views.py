@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from lily.accounts.models import Account
-from lily.messaging.email.utils import get_email_parameter_api_dict, reindex_email_message
+from lily.messaging.email.utils import get_email_parameter_api_dict
 from lily.users.models import UserInfo
 from lily.users.api.serializers import LilyUserSerializer
 
@@ -236,7 +236,6 @@ class EmailMessageViewSet(mixins.RetrieveModelMixin,
             remove_labels.append(settings.GMAIL_LABEL_INBOX)
 
         email._is_archived = True
-        reindex_email_message(email)
         serializer = self.get_serializer(email, partial=True)
         add_and_remove_labels_for_message.delay(email.id, remove_labels=remove_labels)
         return Response(serializer.data)
@@ -251,7 +250,6 @@ class EmailMessageViewSet(mixins.RetrieveModelMixin,
         if email.is_trashed:
             email._is_deleted = True
         email._is_trashed = True
-        reindex_email_message(email)
         serializer = self.get_serializer(email, partial=True)
         trash_email_message.apply_async(args=(email.id,))
         return Response(serializer.data)
@@ -279,7 +277,6 @@ class EmailMessageViewSet(mixins.RetrieveModelMixin,
         """
         email = self.get_object()
         email._is_starred = request.data['starred']
-        reindex_email_message(email)
         serializer = self.get_serializer(email, partial=True)
         toggle_star_email_message.delay(email.id, star=request.data['starred'])
         return Response(serializer.data)
@@ -292,7 +289,6 @@ class EmailMessageViewSet(mixins.RetrieveModelMixin,
         """
         email = self.get_object()
         email._is_spam = request.data['markAsSpam']
-        reindex_email_message(email)
         serializer = self.get_serializer(email, partial=True)
         toggle_spam_email_message.delay(email.id, spam=request.data['markAsSpam'])
         return Response(serializer.data)
