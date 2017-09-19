@@ -2,6 +2,8 @@ from django.utils.six import itervalues, iterkeys, iteritems
 from collections import defaultdict
 from itertools import chain
 
+from lily.search.apps import SearchConfig
+
 
 class DocumentRegistry(object):
     """
@@ -31,16 +33,17 @@ class DocumentRegistry(object):
         Update all the elasticsearch documents attached to this model (if their
         ignore_signals flag allows it)
         """
-        if instance.__class__ in self._models:
-            for doc in self._models[instance.__class__]:
-                if not doc._doc_type.ignore_signals:
-                    doc.update(instance, **kwargs)
-        if instance.__class__ in self._related_models:
-            for model in self._related_models[instance.__class__]:
-                for doc in self._models[model]:
-                    related = doc.get_instances_from_related(instance)
-                    if related:
-                        doc.update(related, **kwargs)
+        if SearchConfig.autosync_enabled():
+            if instance.__class__ in self._models:
+                for doc in self._models[instance.__class__]:
+                    if not doc._doc_type.ignore_signals:
+                        doc.update(instance, **kwargs)
+            if instance.__class__ in self._related_models:
+                for model in self._related_models[instance.__class__]:
+                    for doc in self._models[model]:
+                        related = doc.get_instances_from_related(instance)
+                        if related:
+                            doc.update(related, **kwargs)
 
     def delete(self, instance, **kwargs):
         """

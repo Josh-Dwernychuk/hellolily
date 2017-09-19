@@ -1,8 +1,7 @@
 from django.apps import AppConfig
-from django.conf import settings
-
 from elasticsearch_dsl.connections import connections
 
+from lily.settings import settings
 from .utils import import_class
 
 
