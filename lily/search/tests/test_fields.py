@@ -18,7 +18,7 @@ from lily.search.fields import (
     NestedField,
     ObjectField,
     ShortField,
-)
+    TextField, KeywordField)
 from lily.search.exceptions import VariableLookupError
 
 
@@ -314,25 +314,10 @@ class ShortFieldTestCase(TestCase):
         }, field.to_dict())
 
 
-# ES5 specific fields
-try:
-    from lily.search.fields import KeywordField, TextField
+class KeywordFieldTestCase(TestCase):
+    def test_get_mapping(self):
+        field = KeywordField()
 
-    class TextFieldTestCase(TestCase):
-        def test_get_mapping(self):
-            field = TextField()
-
-            self.assertEqual({
-                'type': 'text',
-            }, field.to_dict())
-
-    class KeywordFieldTestCase(TestCase):
-        def test_get_mapping(self):
-            field = KeywordField()
-
-            self.assertEqual({
-                'type': 'keyword',
-            }, field.to_dict())
-
-except ImportError:
-    pass
+        self.assertEqual({
+            'type': 'keyword',
+        }, field.to_dict())

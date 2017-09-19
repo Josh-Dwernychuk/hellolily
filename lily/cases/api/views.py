@@ -73,9 +73,8 @@ class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     ordering_fields = ('created', 'modified', 'type', 'status_id', 'assigned_to', 'priority', 'subject', 'expires',
                        'created_by__first_name')
     # SearchFilter: set the fields that can be searched on.
-    search_fields = ('account.name', 'contact.full_name', 'assigned_to', 'created_by.full_name', 'status.name',
-                     'subject',
-                     'tags.name', 'type.name',)
+    search_fields = ('account__name', 'contact__full_name', 'assigned_to', 'created_by__full_name', 'status__name',
+                     'subject', 'tags__name', 'type__name',)
     # DjangoFilter: set the filter class.
     filter_class = CaseFilter
 

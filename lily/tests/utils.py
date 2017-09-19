@@ -454,6 +454,52 @@ class GenericAPITestCase(CompareObjectsMixin, UserBasedTest, APITestCase):
         self.assertEqual(request.data, {u'detail': u'Not found.'})
 
 
+class FilterBackendAPITest(object):
+    def get_url_with_query(self, name, params={}, *args, **kwargs):
+        return '%s?%s' % (reverse(name, *args, **kwargs), urlencode(params))
+
+
+class ElasticSearchFilterAPITest(FilterBackendAPITest):
+    search_attribute = None
+    filter_field = None
+
+    def test_list_search_with_elasticsearch(self):
+        """
+        Test list can be searched (with Elasticsearch).
+        """
+        set_current_user(self.user_obj)
+        obj_list = self._create_object(size=3)
+
+        request = self.user.get(self.get_url_with_query(self.list_url), {
+            'search': getattr(obj_list[0], self.search_attribute),
+        })
+        self.assertStatus(request, status.HTTP_200_OK)
+        self._compare_objects(obj_list[0], request.data.get('results')[0])
+
+
+class OrderingFilterAPITest(FilterBackendAPITest):
+    ordering_attribute = None
+
+    def test_list_ordering(self):
+        """
+        Test lists can be sorted by a custom attribute.
+        """
+        set_current_user(self.user_obj)
+        obj_list = self._create_object(size=3)
+
+        request = self.user.get(self.get_url_with_query(self.list_url), {
+            'ordering': self.ordering_attribute,
+        })
+
+        self.assertStatus(request, status.HTTP_200_OK)
+        self.assertEqual(len(obj_list), len(request.data.get('results')))
+
+        sorted_objects = sorted(obj_list, key=lambda obj: getattr(obj, self.ordering_attribute))
+        for i, db_obj in enumerate(sorted_objects):
+            api_obj = request.data.get('results')[i]
+            self._compare_objects(db_obj, api_obj)
+
+
 def get_dummy_credentials():
     access_token = 'foo'
     client_id = 'some_client_id'

@@ -1,9 +1,11 @@
 from unittest import TestCase
-from mock import patch
+
 from django.db import models
-from lily.search.search import DocType
+from mock import patch
+
 from lily.search import fields
 from lily.search.exceptions import (ModelFieldNotMappedError)
+from lily.search.search import DocType
 
 
 class Car(models.Model):
@@ -42,7 +44,6 @@ class CarDocument(DocType):
 
 
 class DocTypeTestCase(TestCase):
-
     def test_model_class_added(self):
         self.assertEqual(CarDocument._doc_type.model, Car)
 
@@ -57,6 +58,7 @@ class DocTypeTestCase(TestCase):
             class Meta:
                 model = Car
                 ignore_signals = True
+
         self.assertTrue(Car2Document._doc_type.ignore_signals)
 
     def test_auto_refresh_added(self):
@@ -64,6 +66,7 @@ class DocTypeTestCase(TestCase):
             class Meta:
                 model = Car
                 auto_refresh = False
+
         self.assertFalse(Car3Document._doc_type.auto_refresh)
 
     def test_fields_populated(self):
@@ -135,16 +138,16 @@ class DocTypeTestCase(TestCase):
         with patch('lily.search.search.bulk') as mock:
             doc.update(car)
             actions = [{
-                    '_id': car.pk,
-                    '_op_type': 'index',
-                    '_source': {
-                        'name': car.name,
-                        'price': car.price,
-                        'type': car.type(),
-                        'color': doc.prepare_color(None),
-                    },
-                    '_index': 'car_index',
-                    '_type': 'car_document'
+                '_id': car.pk,
+                '_op_type': 'index',
+                '_source': {
+                    'name': car.name,
+                    'price': car.price,
+                    'type': car.type(),
+                    'color': doc.prepare_color(None),
+                },
+                '_index': 'car_index',
+                '_type': 'car_document'
             }]
             self.assertEqual(1, mock.call_count)
             self.assertEqual(
@@ -163,7 +166,8 @@ class DocTypeTestCase(TestCase):
                    not_indexed="not_indexex", pk=31)
         with patch('lily.search.search.bulk') as mock:
             doc.update([car, car2], action='update')
-            actions = [{
+            actions = [
+                {
                     '_id': car.pk,
                     '_op_type': 'update',
                     '_source': {
@@ -186,7 +190,8 @@ class DocTypeTestCase(TestCase):
                     },
                     '_index': 'car_index',
                     '_type': 'car_document'
-            }]
+                }
+            ]
             self.assertEqual(1, mock.call_count)
             self.assertEqual(
                 actions, list(mock.call_args_list[0][1]['actions'])

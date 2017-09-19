@@ -124,11 +124,11 @@ function PreferencesCompanyUserList($compile, $scope, $state, $templateCache, HL
                 search: vm.table.searchQuery,
             };
 
-        if (vm.table.statusFilter !== undefined) { // undefined here means "ALL"
-            queryData.is_active = vm.table.statusFilter;
-        } else {
-            queryData.is_active = 'All';
-        }
+            if (vm.table.statusFilter !== undefined) { // undefined here means "ALL"
+                queryData.is_active = vm.table.statusFilter;
+            } else {
+                queryData.is_active = 'All';
+            }
 
             User.search(queryData, response => {
                 vm.table.items = response.results;
