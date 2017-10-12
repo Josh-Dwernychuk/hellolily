@@ -1,8 +1,9 @@
-from django_filters import CharFilter, FilterSet
+from django_filters import CharFilter
 from django_filters.rest_framework import BooleanFilter, DateFilter, DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework.views import APIView
+from rest_framework_filters import FilterSet
 
 from lily.api.filters import ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin

@@ -4,11 +4,29 @@ from django.db import models
 from django.db.models import Manager
 from django.db.models.query_utils import Q
 from elasticsearch_dsl import Search
-from elasticsearch_dsl.query import Bool, Term, Range, Terms, Prefix, Exists, Regexp
+from elasticsearch_dsl.query import Bool, Exists, Prefix, Range, Regexp, Term, Terms
 import six
 
 from lily.search.registries import registry
 from lily.tenant.middleware import get_current_user
+
+
+def serialize_filter_value(value):
+    """
+    Make sure a filter value is JSON serializable.
+
+    Args:
+        value: The QuerySet filter value
+
+    Returns:
+        value or a stringified value which is serializable.
+    """
+    try:
+        json.dumps(value)
+
+        return value
+    except TypeError:
+        return str(value)
 
 
 class ElasticQuerySet(models.QuerySet):
@@ -84,7 +102,11 @@ class ElasticQuerySet(models.QuerySet):
         Returns:
             bool: True if any full text queries are present, False otherwise.
         """
-        return 'must' in self.search.to_dict().get('query', {}).get('bool', {})
+        search_dict = self.search.to_dict()
+
+        return (('must' in search_dict.get('query', {}).get('bool', {})) or
+                ('match' in search_dict.get('query', {})) or
+                ('multi_match' in search_dict.get('query', {})))
 
     def _fetch_all(self):
         """
@@ -188,12 +210,6 @@ class ElasticQuerySet(models.QuerySet):
         queries = []
 
         for key, value in kwargs.iteritems():
-            # Make sure we can serialize the search parameter.
-            try:
-                json.dumps(value)
-            except TypeError:
-                value = str(value)
-
             # Elasticsearch uses dot notation to identify nested fields.
             key = key.replace('__', '.')
 
@@ -207,23 +223,28 @@ class ElasticQuerySet(models.QuerySet):
                 field = str(key.replace('.' + method, ''))
 
                 if method in ('gte', 'gt', 'lt', 'lte'):
-                    query = Range(**{field: {method: value}})
+                    query = Range(**{field: {method: serialize_filter_value(value)}})
                 elif method == 'exact':
-                    query = Term(**{field: value})
+                    query = Term(**{field: serialize_filter_value(value)})
                 elif method == 'in':
-                    query = Terms(**{field: value})
+                    query = Terms(**{field: serialize_filter_value(value)})
                 elif method == 'startswith':
-                    query = Prefix(**{field: value})
+                    query = Prefix(**{field: serialize_filter_value(value)})
                 elif method == 'range':
-                    raise NotImplementedError('Still need to check how range params are passed ;)')
-                elif method == 'year':
-                    # We can filter on years by rounding the times to years
-                    # and then do a range query.
-                    query = Range(**{field: {'gte': {value + '/y'}, 'lt': {value + '/y'}}})
+                    start, end = value
+
+                    query = Range(**{field: {
+                        'gte': serialize_filter_value(start),
+                        'lte': serialize_filter_value(end),
+                    }})
                 elif method == 'isnull':
-                    query = ~Exists(field=field)
+                    if value:
+                        query = ~Exists(field=field)
+                    else:
+                        query = Exists(field=field)
+
                 elif method == 'regex':
-                    query = Regexp(**{field: value})
+                    query = Regexp(**{field: serialize_filter_value(value)})
                 else:
                     raise NotImplementedError('Elasticsearch does not support %s filters.' % method)
             else:
@@ -253,6 +274,9 @@ class ElasticQuerySet(models.QuerySet):
 
         Useful when utilizing the full text search capabilities of
         Elasticsearch outside the QuerySet API.
+
+        Returns:
+            ElasticQuerySet: The query set with updated search query.
         """
         obj = self._clone()
         obj.search = obj.search.query(*args, **kwargs)

@@ -38,7 +38,6 @@ services:
       internal:
     ports:
       - 9203:9200
-      - 9303:9300
     environment:
       - http.host=0.0.0.0  # Dev mode config.
       - transport.host=127.0.0.1  # Dev mode config.
