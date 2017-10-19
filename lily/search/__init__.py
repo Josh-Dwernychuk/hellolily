@@ -1,5 +1,5 @@
 from django.utils.module_loading import autodiscover_modules
-from . import signals
+from django_elasticsearch_dsl import signals  # noqa
 
 
 def autodiscover():

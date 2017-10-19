@@ -1,6 +1,6 @@
-from lily.search.fields import BooleanField, DateField, IntegerField, ObjectField, TextField
-from lily.search.indices import Index
-from lily.search.search import DocType
+from django_elasticsearch_dsl import BooleanField, DateField, IntegerField, ObjectField, TextField
+from django_elasticsearch_dsl import Index
+from django_elasticsearch_dsl import DocType
 from lily.utils.functions import format_phone_number
 from .models import Account as AccountModel
 

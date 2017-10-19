@@ -3,11 +3,10 @@ import json
 from django.db import models
 from django.db.models import Manager
 from django.db.models.query_utils import Q
+from django_elasticsearch_dsl.registries import registry
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Bool, Exists, Prefix, Range, Regexp, Term, Terms
-import six
 
-from lily.search.registries import registry
 from lily.tenant.middleware import get_current_user
 
 
@@ -16,7 +15,7 @@ def serialize_filter_value(value):
     Make sure a filter value is JSON serializable.
 
     Args:
-        value: The QuerySet filter value
+        value: The QuerySet filter value.
 
     Returns:
         value or a stringified value which is serializable.
@@ -40,45 +39,11 @@ class ElasticQuerySet(models.QuerySet):
             doc_types = registry.get_documents([model])
 
             search = Search(
-                index=[doc_type.meta.index for doc_type in doc_types],
+                index=[doc_type._doc_type.index for doc_type in doc_types],
                 doc_type=list(doc_types)
             )[0:10000]
         self.search = search
         self._total = None
-
-    def __getitem__(self, k):
-        """
-        Retrieves an item or slice from the set of results.
-        """
-        if not isinstance(k, (slice,) + six.integer_types):
-            raise TypeError
-        assert ((not isinstance(k, slice) and (k >= 0)) or
-                (isinstance(k, slice) and (k.start is None or k.start >= 0) and
-                 (k.stop is None or k.stop >= 0))), \
-            "Negative indexing is not supported."
-
-        if self._result_cache is not None:
-            return self._result_cache[k]
-
-        if self._has_full_text_search:
-            if isinstance(k, slice):
-                qs = self._clone()
-                if k.start is not None:
-                    start = int(k.start)
-                else:
-                    start = 0
-                if k.stop is not None:
-                    stop = int(k.stop)
-                else:
-                    stop = start + 10000
-                qs.search = qs.search[start:stop]
-                return qs
-            else:
-                qs = self._clone()
-                qs.search = qs.search[k:k + 1]
-                return list(qs)[0]
-        else:
-            return super(ElasticQuerySet, self).__getitem__(k)
 
     def _sql_iterator(self):
         """
@@ -125,11 +90,7 @@ class ElasticQuerySet(models.QuerySet):
                 obj.query.add_q(Q(pk__in=ids))
                 models = {obj._get_pk_val(): obj for obj in obj._sql_iterator()}
 
-                sorted_models = []
-                for idx in ids:
-                    if int(idx) in models:
-                        sorted_models.append(models[int(idx)])
-                self._result_cache = sorted_models
+                self._result_cache = [models[int(idx)] for idx in ids if int(idx) in models]
             else:
                 self._result_cache = list(self._sql_iterator())
                 self._total = super(ElasticQuerySet, self).count()
@@ -187,7 +148,7 @@ class ElasticQuerySet(models.QuerySet):
             if not self._result_cache:
                 self._fetch_all()
 
-            return self._result_cache[0]
+            return self._result_cache[0] if len(self._result_cache) > 0 else None
         else:
             return super(ElasticQuerySet, self).first()
 

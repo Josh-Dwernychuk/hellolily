@@ -1,7 +1,11 @@
-from unittest import TestCase
 import datetime
+import logging
+import time
+from unittest import TestCase
 
 from django.utils.timezone import make_aware
+from django_elasticsearch_dsl import Index
+from django_elasticsearch_dsl.registries import registry
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Match, MultiMatch
 from mock import MagicMock
@@ -9,7 +13,24 @@ from mock import MagicMock
 from lily.cases.factories import CaseFactory
 from lily.cases.models import Case
 from lily.search.models import ElasticQuerySet
-from lily.search.registries import registry
+
+logger = logging.getLogger(__name__)
+
+
+def wait_for_search_results(model, query):
+    doc_type = list(registry.get_documents([model.__class__]))[0]
+    index = Index(doc_type._doc_type.index)
+
+    for i in range(0, 10):
+        response = doc_type.search().query(query).execute(ignore_cache=True)
+        ids = [hit.meta.id for hit in response.hits]
+
+        if model.id in ids:
+            break
+
+        logger.warning('Waiting for Elasticsearch index to update... (%d)' % (i + 1))
+        index.refresh()
+        time.sleep(1)
 
 
 class ElasticQuerySetTestCase(TestCase):
@@ -71,9 +92,11 @@ class ElasticQuerySetTestCase(TestCase):
         first uses Elasticsearch if the query has full text search.
         """
         model = self.model_factory.create()
-        qs = ElasticQuerySet(self.model_class).elasticsearch_query(
-            Match(**{self.search_field: getattr(model, self.search_field)})
-        )
+        query = Match(**{self.search_field: getattr(model, self.search_field)})
+
+        wait_for_search_results(model, query)
+
+        qs = ElasticQuerySet(self.model_class).elasticsearch_query(query)
         qs.search.execute = MagicMock(wraps=qs.search.execute)
 
         result = qs.first()
@@ -125,61 +148,6 @@ class ElasticQuerySetTestCase(TestCase):
 
         qs.search.execute.assert_not_called()
         qs.query.get_count.assert_called_once()
-
-    def test___getitem__uses_elasticsearch_full_text_slice(self):
-        """
-        qs[start:stop] uses Elasticsearch for full text search.
-        """
-        qs = ElasticQuerySet(self.model_class).elasticsearch_query(MultiMatch(query='test', fields=['foo', 'bar']))
-
-        result = qs[10:15]
-        search_dict = result.search.to_dict()
-        self.assertEqual(10, search_dict['from'])
-        self.assertEqual(5, search_dict['size'])
-
-    def test___getitem___elasticsearch_start_from_zero(self):
-        """
-        qs[:stop] will use 0 as starting element.
-        """
-        qs = ElasticQuerySet(self.model_class).elasticsearch_query(MultiMatch(query='test', fields=['foo', 'bar']))
-
-        result = qs[:1337]
-        search_dict = result.search.to_dict()
-        self.assertEqual(0, search_dict['from'])
-        self.assertEqual(1337, search_dict['size'])
-
-    def test___getitem__elasticsearch_takes_upto_10k_items(self):
-        """
-        qs[start:] will take up to 10k items (the max for ES).
-        """
-        qs = ElasticQuerySet(self.model_class).elasticsearch_query(MultiMatch(query='test', fields=['foo', 'bar']))
-
-        result = qs[50:]
-        search_dict = result.search.to_dict()
-        self.assertEqual(50, search_dict['from'])
-        self.assertEqual(10000, search_dict['size'])
-
-    def test___getitem__uses_elasticsearch_full_text_index(self):
-        """
-        qs[k] uses Elasticsearch for full text search.
-        """
-        model = self.model_factory.create()
-
-        for index in registry.get_indices([model.__class__]):
-            index.refresh()
-
-        qs = ElasticQuerySet(self.model_class).elasticsearch_query(
-            Match(**{self.search_field: getattr(model, self.search_field)})
-        )
-        qs.search.__getitem__ = MagicMock(wraps=qs.search.__getitem__)
-
-        result = qs[0]
-
-        self.assertIsNotNone(result)
-        # TODO: Verify that Elasticsearch was actually used.
-        # Unfortunately, the search instance is cloned, so you can't actually
-        # patch and wrap the search executor. May have to try something with
-        # a dummy response, but the ES Response is quite complicated.
 
     def assertFilterEquals(self, search, expected_filter):
         filter_dict = search.to_dict()['query']['bool']['filter']

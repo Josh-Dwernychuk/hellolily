@@ -1,6 +1,6 @@
-from lily.search.fields import BooleanField, IntegerField, KeywordField, TextField
-from lily.search.indices import Index
-from lily.search.search import DocType
+from django_elasticsearch_dsl import BooleanField, IntegerField, KeywordField, TextField
+from django_elasticsearch_dsl import Index
+from django_elasticsearch_dsl import DocType
 from .models import LilyUser as LilyUserModel
 
 user_index = Index('user')

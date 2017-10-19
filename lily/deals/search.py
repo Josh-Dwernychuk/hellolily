@@ -1,6 +1,7 @@
-from lily.search.fields import BooleanField, DateField, FloatField, IntegerField, KeywordField, ObjectField, TextField
-from lily.search.indices import Index
-from lily.search.search import DocType
+from django_elasticsearch_dsl import (BooleanField, DateField, FloatField, IntegerField, KeywordField, ObjectField,
+                                      TextField)
+from django_elasticsearch_dsl import Index
+from django_elasticsearch_dsl import DocType
 from .models import Deal as DealModel
 
 index = Index('deal')
