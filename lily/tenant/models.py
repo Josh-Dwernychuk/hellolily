@@ -9,7 +9,7 @@ from .middleware import get_current_user
 
 
 class TenantManager(models.Manager):
-    # TODO: use_for_related_fields is depracated on Django 1.10 and will be removed in Django 2.0
+    # TODO: use_for_related_fields is deprecated on Django 1.10 and will be removed in Django 2.0.
     use_for_related_fields = True
 
     def get_queryset(self):

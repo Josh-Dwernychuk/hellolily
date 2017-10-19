@@ -471,7 +471,7 @@ class MessageBuilder(object):
             # Save attachments.
             if len(self.attachments):
                 self.message.attachments.all().delete()
-                self.message.attachments.add(*self.attachments)
+                self.message.attachments.add(bulk=False, *self.attachments)
 
             self.message.skip_signal = False  # Re-enable indexing of the email on the last save.
             self.message.save()
