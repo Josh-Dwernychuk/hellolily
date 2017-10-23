@@ -1,7 +1,7 @@
 from lily.accounts.factories import AccountFactory
 from lily.deals.api.serializers import DealSerializer
-from lily.deals.factories import DealContactedByFactory, DealFactory, DealFoundThroughFactory, DealNextStepFactory, \
-    DealStatusFactory, DealWhyCustomerFactory, DealWhyLostFactory
+from lily.deals.factories import (DealContactedByFactory, DealFactory, DealFoundThroughFactory, DealNextStepFactory,
+                                  DealStatusFactory, DealWhyCustomerFactory, DealWhyLostFactory)
 from lily.deals.models import Deal
 from lily.notes.factories import NoteFactory
 from lily.tags.factories import TagFactory

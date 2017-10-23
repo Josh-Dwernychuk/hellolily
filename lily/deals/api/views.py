@@ -7,9 +7,8 @@ from rest_framework.viewsets import ModelViewSet
 
 from lily.api.filters import ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin
-from .serializers import DealContactedBySerializer, DealFoundThroughSerializer, DealNextStepSerializer, \
-    DealSerializer, \
-    DealStatusSerializer, DealWhyCustomerSerializer, DealWhyLostSerializer
+from .serializers import (DealContactedBySerializer, DealFoundThroughSerializer, DealNextStepSerializer,
+                          DealSerializer, DealStatusSerializer, DealWhyCustomerSerializer, DealWhyLostSerializer)
 from ..models import Deal, DealContactedBy, DealFoundThrough, DealNextStep, DealStatus, DealWhyCustomer, DealWhyLost
 
 
