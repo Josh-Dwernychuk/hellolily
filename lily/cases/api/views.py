@@ -71,7 +71,7 @@ class CaseViewSet(ModelChangesMixin, viewsets.ModelViewSet):
     filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('created', 'modified', 'type', 'status_id', 'assigned_to', 'priority', 'subject', 'expires',
+    ordering_fields = ('created', 'modified', 'type', 'status__id', 'assigned_to', 'priority', 'subject', 'expires',
                        'created_by__first_name')
     # SearchFilter: set the fields that can be searched on.
     search_fields = ('account__name', 'contact__full_name', 'assigned_to', 'created_by__full_name', 'status__name',

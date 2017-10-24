@@ -2,12 +2,12 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils.datastructures import MultiValueDictKeyError
 from django_filters import FilterSet
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import detail_route
+from django_filters.rest_framework import DjangoFilterBackend, NumberFilter
 from rest_framework import status
-from rest_framework.response import Response
+from rest_framework.decorators import detail_route
 from rest_framework.filters import OrderingFilter
 from rest_framework.parsers import FileUploadParser
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from tablib import Dataset, UnsupportedFormat
@@ -16,10 +16,9 @@ from lily.api.filters import ElasticSearchFilter
 from lily.api.mixins import ModelChangesMixin
 from lily.calls.api.serializers import CallRecordSerializer
 from lily.calls.models import CallRecord
-from lily.utils.functions import uniquify
-
 from lily.socialmedia.models import SocialMedia
-from lily.utils.models.models import EmailAddress, PhoneNumber, Address
+from lily.utils.functions import uniquify
+from lily.utils.models.models import Address, EmailAddress, PhoneNumber
 from .serializers import AccountSerializer, AccountStatusSerializer
 from ..models import Account, AccountStatus, Website
 
@@ -73,10 +72,10 @@ class AccountViewSet(ModelChangesMixin, ModelViewSet):
     filter_backends = (ElasticSearchFilter, OrderingFilter, DjangoFilterBackend)
 
     # OrderingFilter: set all possible fields to order by.
-    ordering_fields = ('name', 'assigned_to', 'status_id', 'created', 'modified')
+    ordering_fields = ('name', 'assigned_to', 'status', 'created', 'modified', 'assigned_to__first_name')
     # SearchFilter: set the fields that can be searched on.
-    search_fields = ('tags__name', 'email_addresses__email_address', 'assigned_to__full_name', 'customer_id', 'name',
-                     'status', 'type', 'phone_numbers__number', 'domains')
+    search_fields = ('assigned_to_full_name', 'domains', 'description__text', 'email_addresses_addresses',
+                     'name__text', 'phone_numbers_numbers', 'type', 'tags')
     # DjangoFilter: set the filter class.
     filter_class = AccountFilter
 
@@ -128,8 +127,7 @@ class AccountStatusViewSet(ModelViewSet):
 
 
 class AccountImport(APIView):
-
-    classes = (FileUploadParser, )
+    classes = (FileUploadParser,)
 
     def post(self, request):
         try:

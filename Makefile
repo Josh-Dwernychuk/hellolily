@@ -30,9 +30,9 @@ makemigrations:
 	@echo ""
 
 migrate:
-	@echo "Make: docker-compose run --rm web python manage.py migrate"
+	@echo "Make: docker-compose run --rm web bash -c 'Dockers/wait-for-it.sh -b db:5432 && python manage.py migrate'"
 	@echo ""
-	@docker-compose run --rm web python manage.py migrate
+	@docker-compose run --rm web bash -c "Dockers/wait-for-it.sh -b db:5432 && python manage.py migrate"
 	@echo ""
 
 index:
