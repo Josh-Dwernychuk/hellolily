@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
+from lily.messaging.email.models.models import EmailAccount
 from lily.utils.api.permissions import IsAccountAdmin
 
 from ..models import Plan
@@ -86,6 +87,20 @@ class BillingViewSet(ViewSet):
                     if success:
                         billing.plan = Plan.objects.get(name=plan_id)
                         billing.save()
+
+                        # Free plan has a limit of two email accounts.
+                        email_accounts = EmailAccount.objects.filter(tenant=tenant, is_deleted=False)
+
+                        # Sharing isn't part of the free plan, so set first two email accounts to private.
+                        for email_account in email_accounts[:2]:
+                            email_account.privacy = EmailAccount.PRIVATE
+                            email_account.save()
+
+                        # Free plan has a limit of two email accounts.
+                        # So disable all other email accounts.
+                        for email_account in email_accounts[2:]:
+                            email_account.is_active = False
+                            email_account.save()
 
                     return Response({'success': success}, content_type='application/json')
                 else:

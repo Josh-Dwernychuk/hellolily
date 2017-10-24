@@ -268,6 +268,7 @@ class EmailAccountSerializer(WritableNestedSerializer):
             'is_syncing',
             'label',
             'labels',
+            'is_active',
             'is_authorized',
             'is_public',
             'only_new',

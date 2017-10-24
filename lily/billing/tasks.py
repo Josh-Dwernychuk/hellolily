@@ -6,6 +6,7 @@ from celery.task import task
 from django.conf import settings
 
 from lily.billing.models import Plan
+from lily.messaging.email.models.models import EmailAccount
 from lily.tenant.models import Tenant
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,19 @@ def check_subscriptions():
 
                     billing.plan = Plan.objects.get(name=settings.CHARGEBEE_FREE_PLAN_NAME)
                     billing.save()
+
+                    email_accounts = EmailAccount.objects.filter(tenant=tenant, is_deleted=False)
+
+                    # Sharing isn't part of the free plan, so set first two email accounts to private.
+                    for email_account in email_accounts[:2]:
+                        email_account.privacy = EmailAccount.PRIVATE
+                        email_account.save()
+
+                    # Free plan has a limit of two email accounts.
+                    # So disable all other email accounts.
+                    for email_account in email_accounts[2:]:
+                        email_account.is_active = False
+                        email_account.save()
 
                     logger.info('Set subscription for %s to free plan' % tenant.name)
                 elif subscription.plan_id != billing.plan.name:

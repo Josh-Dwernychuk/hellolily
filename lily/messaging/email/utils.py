@@ -10,6 +10,7 @@ import html2text
 from urllib import unquote
 
 from django.apps import apps
+from django.db.models.query_utils import Q
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse
@@ -22,9 +23,10 @@ from lily.accounts.models import Account
 from lily.contacts.models import Contact
 from lily.search.scan_search import ModelMappings
 from lily.search.indexing import update_in_index
+from lily.utils.functions import has_required_tier
 
 from .decorators import get_safe_template
-from .models.models import EmailAttachment, EmailMessage, EmailAccount
+from .models.models import EmailAttachment, EmailMessage, EmailAccount, SharedEmailConfig
 from .sanitize import sanitize_html_email
 
 _EMAIL_PARAMETER_DICT = {}
@@ -612,3 +614,35 @@ def get_extensions_for_type(general_type):
 
     # return at least an extension for unknown mimetypes
     yield '.bak'
+
+
+def get_shared_email_accounts(user):
+    if has_required_tier(1):
+        # Team plan allows sharing of email account.
+        # Get a list of email accounts which are publicly shared or shared specifically with the user.
+        shared_email_account_list = EmailAccount.objects.filter(
+            Q(owner=user) |
+            Q(privacy=EmailAccount.PUBLIC) |
+            (Q(sharedemailconfig__user__id=user.pk) & Q(sharedemailconfig__privacy=EmailAccount.PUBLIC))
+        )
+    else:
+        # Free plan, so only allow own email accounts.
+        shared_email_account_list = EmailAccount.objects.filter(
+            Q(owner=user)
+        )
+
+    shared_email_account_list = shared_email_account_list.filter(tenant=user.tenant, is_deleted=False).distinct('id')
+
+    # Get a list of email accounts the user doesn't want to follow.
+    email_account_exclude_list = SharedEmailConfig.objects.filter(
+        user=user,
+        is_hidden=True
+    ).values_list('email_account_id', flat=True)
+
+    # Exclude those email accounts from the accounts that are shared with the user.
+    # So it's a list of email accounts the user wants to follow or is allowed to view.
+    email_account_list = shared_email_account_list.exclude(
+        id__in=email_account_exclude_list
+    )
+
+    return email_account_list
