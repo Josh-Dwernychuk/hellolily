@@ -15,6 +15,8 @@ from lily.messaging.email.utils import get_email_parameter_api_dict, reindex_ema
 from lily.search.lily_search import LilySearch
 from lily.users.models import UserInfo
 from lily.users.api.serializers import LilyUserSerializer
+from lily.utils.functions import format_phone_number
+from lily.utils.models.models import PhoneNumber
 
 from .serializers import (EmailLabelSerializer, EmailAccountSerializer, EmailMessageSerializer,
                           EmailTemplateFolderSerializer, EmailTemplateSerializer, SharedEmailConfigSerializer,
@@ -396,8 +398,11 @@ class EmailMessageViewSet(mixins.RetrieveModelMixin,
                 number = match.number
 
                 number = phonenumbers.format_number(number, number_format).replace(' ', '')
+                number = format_phone_number(number, country, True)
 
-                if number not in phone_numbers:
+                number_exists = PhoneNumber.objects.filter(number=number).exists()
+
+                if number not in phone_numbers and not number_exists:
                     phone_numbers.append(number)
 
         return Response({'phone_numbers': phone_numbers})
