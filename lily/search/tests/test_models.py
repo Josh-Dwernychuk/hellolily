@@ -8,7 +8,6 @@ from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Match, MultiMatch
 from mock import MagicMock
 
-from lily.billing.models import Plan
 from lily.cases.factories import CaseFactory
 from lily.cases.models import Case
 from lily.search.models import ElasticQuerySet
