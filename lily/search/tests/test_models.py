@@ -8,6 +8,7 @@ from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import Match, MultiMatch
 from mock import MagicMock
 
+from lily.billing.models import Plan
 from lily.cases.factories import CaseFactory
 from lily.cases.models import Case
 from lily.search.models import ElasticQuerySet
@@ -41,7 +42,7 @@ class ElasticQuerySetTestCase(TestCase):
     def get_query_set_with_full_text_search(self):
         return ElasticQuerySet(self.model_class).elasticsearch_query(MultiMatch(query='test', fields=['foo', 'bar']))
 
-    def test___init_(self):
+    def test_init(self):
         """
         ElasticQuerySet init creates a new search object.
         """

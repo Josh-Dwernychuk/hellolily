@@ -470,39 +470,14 @@ class ElasticSearchFilterAPITest(object):
         set_current_user(self.user_obj)
         obj_list = self._create_object(size=3)
 
+        for idx in registry.get_indices([self.model_cls]):
+            idx.refresh()
+
         request = self.user.get(get_url_with_query(self.list_url), {
             'search': getattr(obj_list[0], self.search_attribute),
         })
         self.assertStatus(request, status.HTTP_200_OK)
-        # self._compare_objects(obj_list[0], request.data.get('results')[0])
-
-
-class OrderingFilterAPITest(object):
-    ordering_attribute = None
-
-    def test_list_ordering(self):
-        """
-        Test lists can be sorted by a custom attribute.
-        """
-        set_current_user(self.user_obj)
-        obj_list = self._create_object(size=3)
-
-        indexes = registry.get_indices([self.model_cls])
-
-        for index in indexes:
-            index.refresh()
-
-        request = self.user.get(get_url_with_query(self.list_url), {
-            'ordering': self.ordering_attribute,
-        })
-
-        self.assertStatus(request, status.HTTP_200_OK)
-        self.assertEqual(len(obj_list), len(request.data.get('results')))
-
-        sorted_objects = sorted(obj_list, key=lambda obj: getattr(obj, self.ordering_attribute))
-        for i, db_obj in enumerate(sorted_objects):
-            api_obj = request.data.get('results')[i]
-            self._compare_objects(db_obj, api_obj)
+        self._compare_objects(obj_list[0], request.data.get('results')[0])
 
 
 def get_dummy_credentials():

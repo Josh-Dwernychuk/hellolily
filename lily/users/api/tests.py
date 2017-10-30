@@ -5,13 +5,13 @@ from rest_framework import status
 
 from lily.billing.models import Billing
 from lily.tenant.middleware import set_current_user
-from lily.tests.utils import GenericAPITestCase, OrderingFilterAPITest, ElasticSearchFilterAPITest
+from lily.tests.utils import GenericAPITestCase, ElasticSearchFilterAPITest
 from lily.users.api.serializers import LilyUserSerializer
 from lily.users.factories import LilyUserFactory
 from lily.users.models import LilyUser
 
 
-class LilyUserTests(OrderingFilterAPITest, ElasticSearchFilterAPITest, GenericAPITestCase):
+class LilyUserTests(ElasticSearchFilterAPITest, GenericAPITestCase):
     """
     Class containing tests for the case API.
 
@@ -23,7 +23,6 @@ class LilyUserTests(OrderingFilterAPITest, ElasticSearchFilterAPITest, GenericAP
     factory_cls = LilyUserFactory
     model_cls = LilyUser
     serializer_cls = LilyUserSerializer
-    ordering_attribute = 'first_name'
     search_attribute = 'full_name'
 
     def _create_object(self, with_relations=False, size=1, **kwargs):

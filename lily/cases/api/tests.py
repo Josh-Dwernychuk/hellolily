@@ -3,11 +3,11 @@ from lily.cases.api.serializers import CaseSerializer
 from lily.cases.factories import CaseFactory, CaseStatusFactory, CaseTypeFactory
 from lily.cases.models import Case
 from lily.contacts.factories import ContactFactory
-from lily.tests.utils import ElasticSearchFilterAPITest, GenericAPITestCase, OrderingFilterAPITest
+from lily.tests.utils import ElasticSearchFilterAPITest, GenericAPITestCase
 from lily.users.factories import LilyUserFactory
 
 
-class CaseTests(OrderingFilterAPITest, ElasticSearchFilterAPITest, GenericAPITestCase):
+class CaseTests(ElasticSearchFilterAPITest, GenericAPITestCase):
     """
     Class containing tests for the case API.
 
@@ -19,7 +19,6 @@ class CaseTests(OrderingFilterAPITest, ElasticSearchFilterAPITest, GenericAPITes
     factory_cls = CaseFactory
     model_cls = Case
     serializer_cls = CaseSerializer
-    ordering_attribute = 'status_id'
     search_attribute = 'subject'
 
     def _create_object_stub(self, with_relations=False, size=1, **kwargs):

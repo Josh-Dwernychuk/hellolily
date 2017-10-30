@@ -5,11 +5,11 @@ from lily.deals.factories import (DealContactedByFactory, DealFactory, DealFound
 from lily.deals.models import Deal
 from lily.notes.factories import NoteFactory
 from lily.tags.factories import TagFactory
-from lily.tests.utils import ElasticSearchFilterAPITest, GenericAPITestCase, OrderingFilterAPITest
+from lily.tests.utils import ElasticSearchFilterAPITest, GenericAPITestCase
 from lily.users.factories import LilyUserFactory
 
 
-class DealTests(OrderingFilterAPITest, ElasticSearchFilterAPITest, GenericAPITestCase):
+class DealTests(ElasticSearchFilterAPITest, GenericAPITestCase):
     """
     Class containing tests for the deal API.
 
@@ -21,7 +21,6 @@ class DealTests(OrderingFilterAPITest, ElasticSearchFilterAPITest, GenericAPITes
     factory_cls = DealFactory
     model_cls = Deal
     serializer_cls = DealSerializer
-    ordering_attribute = 'amount_once'
     search_attribute = 'description'
 
     def _create_object_stub(self, with_relations=False, size=1, **kwargs):

@@ -7,11 +7,11 @@ from lily.contacts.factories import ContactFactory, FunctionFactory
 from lily.contacts.models import Contact
 from lily.socialmedia.factories import SocialMediaFactory
 from lily.tags.factories import TagFactory
-from lily.tests.utils import ElasticSearchFilterAPITest, GenericAPITestCase, OrderingFilterAPITest
+from lily.tests.utils import ElasticSearchFilterAPITest, GenericAPITestCase
 from lily.utils.models.factories import AddressFactory, EmailAddressFactory, PhoneNumberFactory
 
 
-class ContactTests(OrderingFilterAPITest, ElasticSearchFilterAPITest, GenericAPITestCase):
+class ContactTests(ElasticSearchFilterAPITest, GenericAPITestCase):
     """
     Class containing tests for the contact API.
 
@@ -23,7 +23,6 @@ class ContactTests(OrderingFilterAPITest, ElasticSearchFilterAPITest, GenericAPI
     factory_cls = ContactFactory
     model_cls = Contact
     serializer_cls = ContactSerializer
-    ordering_attribute = 'modified'
     search_attribute = 'full_name'
 
     def _create_object(self, with_relations=False, size=1, **kwargs):
